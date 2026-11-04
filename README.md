@@ -24,6 +24,7 @@ Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15
 - **Official posts are marked**, so a network's own announcement is never confused with reporting about it.
 - **Eight topics:** markets, ETFs and institutions, regulation, DeFi, stablecoins, hacks and security, exchanges, development.
 - **Biggest 24-hour moves**, the most covered stories of the week, search, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
+- **Reader view:** when a feed carries the whole post, the story gets a "Read here · 4 min" link. It opens the text alone on a quiet page: no menus, prices, sidebar or footer, a serif reading font, a reading-progress bar, and text size, typeface and theme settings that are remembered. The text comes only from the publisher's own feed (never scraped from their website), images and embeds stay on the original, every page links to it, and reader pages are kept out of search engines. The [sources page](https://hashwire.vercel.app/sources) shows which feeds carry full posts.
 - **Light, dark or system theme:** switch in the header. Your choice is saved in your browser and applied before the page paints, so a dark page never flashes white. Without a choice, the site follows your system setting.
 
 ### Sources
@@ -44,7 +45,7 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 | Feeds | RSS 2.0, RSS 1.0 and Atom parsed with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser); text cleaned with [entities](https://github.com/fb55/entities) |
 | Prices | CoinGecko `/simple/price`, one request for every network |
 | Caching | `unstable_cache`: each feed for 15 minutes, prices for 10 minutes |
-| Tests | Vitest (83 unit and API tests), Playwright (64 end-to-end runs on desktop and mobile), axe-core accessibility checks |
+| Tests | Vitest (91 unit and API tests), Playwright (84 end-to-end runs on desktop and mobile), axe-core accessibility checks |
 | CI | GitHub Actions: lint, type check, unit tests, build, end-to-end tests |
 | Hosting | Vercel |
 
@@ -97,6 +98,7 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 
 - A strict Content Security Policy with a fresh nonce on every request (`src/proxy.ts`), plus `X-Frame-Options`, `Referrer-Policy`, HSTS and a `Permissions-Policy` that switches everything off. Network colours are drawn as SVG fills so that no inline styles are needed.
 - No secrets required. The optional CoinGecko key stays on the server.
+- Feed HTML shown in the reader view is cleaned with [sanitize-html](https://github.com/apostrophecms/sanitize-html) to an allowlist of text elements: no scripts, styles, event handlers, forms, iframes or images; links are made absolute, limited to http(s) and mailto, and marked `nofollow`.
 - Google Analytics is opt-in through `GA_MEASUREMENT_ID` and loads under the same nonce-based policy.
 - Landmarks, a skip link, visible focus, one `h1` per page, readable contrast in both themes, and price changes spoken in words ("up 1.7% in 24 hours"). The networks table has a caption and row headers and can be scrolled with the keyboard. End-to-end tests run axe-core on every page type and fail on any serious WCAG 2.1 AA issue.
 
@@ -160,22 +162,27 @@ src/
     networks/                 All networks with prices
     network/[slug]/           One network: price, official posts, its news (+ social image)
     topic/[slug]/, source/[slug]/, sources/, about/, search/
+    read/[id]/                Reader view (noindex)
     feed.xml/route.ts         Hashwire's own RSS feed
     sitemap.ts, robots.ts, manifest.ts, opengraph-image.tsx, apple-icon.tsx, icon.svg
     layout.tsx, not-found.tsx, error.tsx, globals.css
-  components/                 Frame, network strip, table, chips, prices, lead, story list, side panels
+  components/                 Frame, network strip, table, chips, prices, lead, story list, side panels,
+                              theme switch, reader settings
   lib/
     networks.ts               The 22 networks and how stories are matched to them
     prices.ts                 CoinGecko request, validation and number formatting
     sources.ts                The 13 feeds and their filters
     feeds.ts                  Fetching and caching (server only)
     parse.ts                  RSS and Atom parsing
+    reader.ts                 Reader view: cleaning feed HTML, reading time
+    theme.ts                  Theme and reader settings, and the script that applies them before paint
     stories.ts, text.ts       Cleaning, filtering, safe URLs
     topics.ts                 Topic rules and page copy
     cluster.ts                Grouping reports of the same news
     load.ts                   One wire per request, filters, search
     time.ts, site.ts, csp.ts, analytics.ts, og.tsx
-    fixtures/                 Saved feed and price snapshots for development and tests
+    fixtures/                 Saved feed and price snapshots for development and tests, and
+                              placeholder full text for two sample stories (reader view tests)
   proxy.ts                    Content Security Policy with nonces; 404 for unknown sections
 e2e/                          Playwright tests
 ```
@@ -184,7 +191,7 @@ Hashwire is the sister site of [Tensorwire](https://github.com/Shahryartariq/ten
 
 ## Credits
 
-Headlines and excerpts belong to their publishers and link to the original articles. Prices by CoinGecko. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).
+Headlines, excerpts and the post text shown in the reader view belong to their publishers, come from their public feeds, and link to the original articles. Prices by CoinGecko. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).
 
 ## License
 
