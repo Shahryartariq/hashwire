@@ -12,11 +12,13 @@ describe("GET /feed.xml", () => {
     const xml = await response.text();
     const doc = new XMLParser({ ignoreAttributes: false }).parse(xml);
     const items = doc.rss.channel.item;
-    expect(doc.rss.channel.title).toBe("Tensorwire");
+    expect(doc.rss.channel.title).toBe("Hashwire");
     expect(items.length).toBe(50);
     expect(items.every((i: { link: string }) => /^https:\/\//.test(i.link))).toBe(true);
-    const flashprove = items.find((i: { title: string }) => i.title.includes("FlashProve"));
-    expect(flashprove.description).toContain("Also reported by TechCrunch");
+    const theft = items.find((i: { title: string }) => i.title.includes("Crédit Mutuel"));
+    expect(theft.description).toMatch(/Also reported by (CoinDesk, Decrypt|Decrypt, CoinDesk)\./);
+    const bitcoin = items.find((i: { title: string }) => i.title.startsWith("Bitcoin rebounds"));
+    expect(bitcoin.category).toContain("Bitcoin");
     vi.unstubAllEnvs();
   });
 });

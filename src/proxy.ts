@@ -2,21 +2,23 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { measurementId } from "@/lib/analytics";
 import { buildCsp } from "@/lib/csp";
+import { networkBySlug } from "@/lib/networks";
 import { sourceBySlug } from "@/lib/sources";
 import { topicBySlug } from "@/lib/topics";
 
-const SECTION = /^\/(topic|source)\/([^/]+)\/?$/;
+const SECTION = /^\/(topic|source|network)\/([^/]+)\/?$/;
 
 /**
  * A fresh nonce per request for a strict Content Security Policy: only scripts and styles
  * that Next.js itself rendered with the nonce may run.
  */
 export function proxy(request: NextRequest) {
-  // Unknown topics and sources get a real 404 status before any HTML is streamed.
+  // Unknown networks, topics and sources get a real 404 status before any HTML is streamed.
   const section = SECTION.exec(request.nextUrl.pathname);
   if (section) {
     const slug = decodeURIComponent(section[2]);
-    const known = section[1] === "topic" ? topicBySlug(slug) : sourceBySlug(slug);
+    const known =
+      section[1] === "topic" ? topicBySlug(slug) : section[1] === "network" ? networkBySlug(slug) : sourceBySlug(slug);
     if (!known) return NextResponse.rewrite(new URL("/_not-a-page", request.url));
   }
 

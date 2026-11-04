@@ -1,4 +1,5 @@
 import { getWire } from "@/lib/load";
+import { networkName } from "@/lib/networks";
 import { SITE_NAME, TAGLINE, absolute } from "@/lib/site";
 import { sourceName } from "@/lib/sources";
 import { topicBySlug } from "@/lib/topics";
@@ -10,7 +11,7 @@ function escape(value: string): string {
   return value.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]!);
 }
 
-/** Tensorwire's own RSS feed: the latest 50 stories, each once, with the other coverage named. */
+/** Hashwire's own RSS feed: the latest 50 stories, each once, with the other coverage named. */
 export async function GET() {
   const wire = await getWire();
   const items = wire.clusters.slice(0, 50).map((cluster) => {
@@ -23,9 +24,10 @@ export async function GET() {
       "<item>",
       `<title>${escape(lead.title)}</title>`,
       `<link>${escape(lead.url)}</link>`,
-      `<guid isPermaLink="false">tensorwire-${lead.id}</guid>`,
+      `<guid isPermaLink="false">hashwire-${lead.id}</guid>`,
       `<pubDate>${new Date(cluster.latest).toUTCString()}</pubDate>`,
       `<source url="${escape(absolute(`/source/${lead.source}`))}">${escape(sourceName(lead.source))}</source>`,
+      ...cluster.networks.map((n) => `<category>${escape(networkName(n))}</category>`),
       ...cluster.topics.map((t) => `<category>${escape(topicBySlug(t)?.name ?? t)}</category>`),
       description ? `<description>${escape(description)}</description>` : "",
       "</item>",

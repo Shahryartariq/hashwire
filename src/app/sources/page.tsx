@@ -9,15 +9,15 @@ import { agoLong } from "@/lib/time";
 import type { SourceKind } from "@/lib/types";
 
 const description =
-  "The 18 AI news sources Tensorwire reads every 15 minutes: lab blogs, newsrooms and independent builders, with the latest status of each feed.";
+  "The 13 crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams and exchange listings, with the latest status of each feed.";
 
 export const metadata: Metadata = {
   title: "Sources",
   description,
-  ...pageMeta("/sources", "Tensorwire sources", description),
+  ...pageMeta("/sources", "Hashwire sources", description),
 };
 
-const KINDS: SourceKind[] = ["lab", "press", "builder"];
+const KINDS: SourceKind[] = ["press", "network", "exchange"];
 
 export default async function SourcesPage() {
   const wire = await getWire();
@@ -28,8 +28,8 @@ export default async function SourcesPage() {
           <h1>Sources</h1>
           <div className="band-intro">
             <p>
-              Tensorwire reads these feeds every 15 minutes. It shows each story&apos;s headline, a short excerpt where the
-              feed provides one, and a link to the original. Some feeds also cover other subjects; for those, only the AI
+              Hashwire reads these feeds every 15 minutes. It shows each story&apos;s headline, a short excerpt where the
+              feed provides one, and a link to the original. Some feeds also cover other subjects; for those, only the crypto
               posts are kept.
             </p>
           </div>

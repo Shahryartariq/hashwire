@@ -1,4 +1,4 @@
-import "@fontsource-variable/schibsted-grotesk";
+import "@fontsource-variable/archivo/wdth.css";
 import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -12,15 +12,15 @@ export function generateMetadata(): Metadata {
   const google = process.env.GOOGLE_SITE_VERIFICATION?.trim();
   return {
     metadataBase: siteUrl(),
-    title: { default: `${SITE_NAME}: today's AI news`, template: `%s · ${SITE_NAME}` },
+    title: { default: `${SITE_NAME}: crypto news by blockchain`, template: `%s · ${SITE_NAME}` },
     description: SITE_DESCRIPTION,
     applicationName: SITE_NAME,
     authors: [AUTHOR],
     creator: AUTHOR.name,
-    keywords: ["AI news", "artificial intelligence news", "LLM news", "AI model releases", "AI research", "OpenAI", "Google DeepMind", "Hugging Face"],
+    keywords: ["crypto news", "blockchain news", "bitcoin news", "ethereum news", "solana news", "crypto prices", "DeFi news", "crypto regulation"],
     category: "news",
     formatDetection: { telephone: false, address: false, email: false },
-    alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest AI news` }] } },
+    alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }] } },
     openGraph: { type: "website", siteName: SITE_NAME, locale: "en_US", url: "/" },
     twitter: { card: "summary_large_image" },
     ...(google ? { verification: { google } } : {}),
@@ -30,8 +30,8 @@ export function generateMetadata(): Metadata {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#101735" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0F22" },
+    { media: "(prefers-color-scheme: light)", color: "#1E1030" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0614" },
   ],
 };
 

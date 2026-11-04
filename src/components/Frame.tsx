@@ -13,7 +13,7 @@ export function Frame({
   sample,
   children,
 }: {
-  /** "home", "labs" or a topic slug, to mark the current section in the nav. */
+  /** "home", "networks" or a topic slug, to mark the current section in the nav. */
   active?: string;
   query?: string;
   sample?: boolean;
@@ -21,7 +21,7 @@ export function Frame({
 }) {
   const sections = [
     { href: "/", key: "home", label: "All news" },
-    { href: "/labs", key: "labs", label: "From the labs" },
+    { href: "/networks", key: "networks", label: "Networks" },
     ...TOPICS.map((t) => ({ href: `/topic/${t.slug}`, key: t.slug, label: t.name })),
   ];
   return (
@@ -31,15 +31,15 @@ export function Frame({
       </a>
       <header className="masthead">
         <div className="masthead-row">
-          <Link href="/" className="brand" aria-label="Tensorwire home">
+          <Link href="/" className="brand" aria-label="Hashwire home">
             <Mark />
-            <span>Tensorwire</span>
+            <span>Hashwire</span>
           </Link>
           <form className="search" action="/search" method="get" role="search">
             <label htmlFor="q" className="visually-hidden">
-              Search AI news
+              Search crypto news
             </label>
-            <input id="q" name="q" type="search" placeholder="Search AI news" defaultValue={query} maxLength={80} autoComplete="off" />
+            <input id="q" name="q" type="search" placeholder="Search crypto news" defaultValue={query} maxLength={80} autoComplete="off" />
             <button type="submit">Search</button>
           </form>
         </div>
@@ -63,10 +63,17 @@ export function Frame({
       <footer className="footer">
         <div className="footer-inner">
           <p className="footer-brand">
-            <Mark /> Tensorwire
+            <Mark /> Hashwire
           </p>
           <p>
             Headlines and short excerpts link to the original articles. Every story belongs to its publisher.
+          </p>
+          <p>
+            Prices by{" "}
+            <a href="https://www.coingecko.com/" rel="noopener">
+              CoinGecko
+            </a>
+            , refreshed every 10 minutes. Nothing on Hashwire is investment advice.
           </p>
           <ul className="footer-links">
             <li>
