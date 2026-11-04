@@ -1,4 +1,5 @@
 import { networksFor } from "./networks";
+import { readingMinutes } from "./reader";
 import { excerpt, hashId, plainText, safeUrl, urlKey } from "./text";
 import { topicsFor } from "./topics";
 import type { RawItem, Source, Story } from "./types";
@@ -62,6 +63,7 @@ export function toStories(source: Source, items: RawItem[], now: number): Story[
 
     const summary = source.summaries !== false && usefulSummary(text, title, categories) ? excerpt(text) : undefined;
     const discussion = safeUrl(item.comments) ?? undefined;
+    const read = readingMinutes(item.body, url);
     const body = source.summaries === false ? "" : text;
 
     stories.push({
@@ -74,6 +76,7 @@ export function toStories(source: Source, items: RawItem[], now: number): Story[
       topics: topicsFor(title, body, categories),
       networks: networksFor(title, body, categories, source.network),
       ...(discussion && discussion !== url ? { discussion } : {}),
+      ...(read ? { read } : {}),
     });
   }
 
