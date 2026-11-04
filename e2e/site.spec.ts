@@ -1,0 +1,308 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
+
+const problems: string[] = [];
+
+test.beforeEach(async ({ page }) => {
+  problems.length = 0;
+  page.on("pageerror", (error) => problems.push(error.message));
+  // Script errors and Content Security Policy violations are logged as console errors.
+  page.on("console", (message) => {
+    // A deliberate 404 page logs its own status; that's expected, not a bug.
+    if (message.type() === "error" && !message.text().includes("status of 404")) problems.push(message.text());
+  });
+});
+
+test.afterEach(() => {
+  expect(problems, "errors in the browser console").toEqual([]);
+});
+
+async function expectAccessible(page: Page) {
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+}
+
+async function noHorizontalScroll(page: Page) {
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+}
+
+test.describe("front page", () => {
+  test("leads with the most covered story and lists the rest by age", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1, name: "Crypto news today" })).toBeVisible();
+
+    const lead = page.locator(".lead");
+    await expect(lead.getByRole("heading", { level: 2 })).toContainText("Crédit Mutuel");
+    await expect(lead.getByText("Reported by 3 sources")).toBeVisible();
+    await expect(lead.getByRole("link", { name: /CoinDesk/ })).toHaveAttribute("href", /coindesk\.com/);
+
+    await expect(page.getByRole("heading", { level: 2, name: "Past 6 hours" })).toBeVisible();
+    await expect(page.locator(".story")).toHaveCount(40);
+    await expect(page.locator(".story-title", { hasText: "Crédit Mutuel" })).toHaveCount(0);
+  });
+
+  test("shows the networks with prices, and each one opens its own news", async ({ page }) => {
+    await page.goto("/");
+    const strip = page.getByRole("navigation", { name: "Networks" });
+    const links = strip.getByRole("link");
+    await expect(links).toHaveCount(13);
+    await expect(links.first()).toContainText("Bitcoin");
+    await expect(links.first()).toContainText("$78,283");
+    await expect(links.first()).toContainText("up 1.7% in 24 hours");
+    await expect(strip.getByRole("link", { name: "All 22 networks" })).toHaveAttribute("href", "/networks");
+
+    await strip.getByRole("link", { name: /^Solana/ }).click();
+    await expect(page).toHaveURL(/\/network\/solana$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Solana");
+  });
+
+  test("tags every story with its networks, linked to their pages", async ({ page }) => {
+    await page.goto("/");
+    const row = page.locator(".story", { hasText: "Coinbase XRP looked cheap" });
+    await expect(row.locator(".chip")).toHaveText(["XRP Ledger"]);
+    await row.getByRole("link", { name: "XRP Ledger" }).click();
+    await expect(page).toHaveURL(/\/network\/xrp-ledger$/);
+    await expect(page.locator(".story", { hasText: "Coinbase XRP looked cheap" })).toHaveCount(1);
+  });
+
+  test("shows a story once with all of its coverage", async ({ page }) => {
+    await page.goto("/");
+    const row = page.locator(".story", { hasText: "Morgan Stanley says it is among" });
+    await expect(row).toHaveCount(1);
+    await expect(row.getByRole("img", { name: "Reported by 3 sources" })).toBeVisible();
+    await expect(row.locator(".also").getByRole("link")).toHaveCount(2);
+  });
+
+  test("ranks coverage, the biggest price moves and topics", async ({ page }) => {
+    await page.goto("/");
+    const ranked = page.getByRole("region", { name: "Most covered this week" }).getByRole("listitem");
+    expect(await ranked.count()).toBeGreaterThanOrEqual(3);
+    const movers = page.getByRole("region", { name: "Biggest moves, 24 hours" }).getByRole("link");
+    await expect(movers).toHaveCount(5);
+    await expect(movers.first()).toContainText("Polygon");
+    await expect(movers.last()).toContainText("Tron");
+    await expect(page.getByRole("region", { name: "Browse by topic" }).getByRole("link")).toHaveCount(8);
+  });
+
+  test("marks stories that are new since the last visit", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".new-since")).toHaveCount(0);
+    await page.waitForFunction(() => localStorage.getItem("hashwire:seen") !== null);
+    await page.evaluate(() => {
+      const newest = Math.max(...[...document.querySelectorAll<HTMLElement>(".story[data-ts]")].map((r) => Number(r.dataset.ts)));
+      localStorage.setItem("hashwire:seen", String(newest - 6 * 3_600_000));
+    });
+    await page.reload();
+    await expect(page.locator(".new-since")).toContainText(/\d+ new stor(y|ies) since your last visit/);
+    expect(await page.locator(".story.is-new").count()).toBeGreaterThan(0);
+  });
+
+  test("is accessible and fits the screen", async ({ page }) => {
+    await page.goto("/");
+    await expectAccessible(page);
+    await noHorizontalScroll(page);
+  });
+
+  test("skip link moves focus to the news", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Keyboard navigation is a desktop check");
+    await page.goto("/");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("link", { name: "Skip to the news" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("main")).toBeFocused();
+  });
+});
+
+test.describe("networks", () => {
+  test("the networks page lists every network by market cap with prices and story counts", async ({ page }) => {
+    await page.goto("/networks");
+    await expect(page.getByRole("heading", { level: 1, name: "Networks" })).toBeVisible();
+    const rows = page.locator(".networks-table tbody tr");
+    await expect(rows).toHaveCount(22);
+    await expect(rows.first()).toContainText("Bitcoin");
+    await expect(rows.first()).toContainText("$78,283");
+    await expect(rows.last()).toContainText("Base");
+    await expect(rows.last()).toContainText("No token");
+    await expectAccessible(page);
+    await noHorizontalScroll(page);
+  });
+
+  test("a network page shows its price, its team's posts and only its news", async ({ page }) => {
+    await page.goto("/network/ethereum");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Ethereum");
+    await expect(page.locator(".price-big")).toHaveText("$2,322");
+    await expect(page.getByRole("link", { name: "Official posts: Ethereum Foundation" })).toHaveAttribute(
+      "href",
+      "/source/ethereum-foundation",
+    );
+    const rows = page.locator(".story");
+    expect(await rows.count()).toBeGreaterThan(1);
+    for (const row of await rows.all()) await expect(row.locator(".chip", { hasText: "Ethereum" })).toHaveCount(1);
+    await expect(page.locator(".story", { hasText: "Glamsterdam on Hoodi Postponed" }).locator(".official")).toHaveText("Official");
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Networks" })).toBeVisible();
+    await expectAccessible(page);
+  });
+
+  test("a network without a token still has a page", async ({ page }) => {
+    await page.goto("/network/base");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Base");
+    await expect(page.locator(".price-block")).toHaveCount(0);
+    expect(await page.locator(".story").count()).toBeGreaterThanOrEqual(3);
+  });
+});
+
+test.describe("sections", () => {
+  test("topic pages filter the wire and mark the current section", async ({ page }) => {
+    await page.goto("/topic/security");
+    await expect(page.getByRole("heading", { level: 1, name: "Hacks and security" })).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: "Hacks and security" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(await page.locator(".story").count()).toBeGreaterThan(3);
+    await expect(page.locator(".story", { hasText: "Binance Says $6.34 Billion Hack" })).toHaveCount(1);
+    await expectAccessible(page);
+  });
+
+  test("source pages show the source's stories and a link to its site", async ({ page }) => {
+    await page.goto("/source/kraken");
+    await expect(page.getByRole("heading", { level: 1, name: "Kraken" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Visit Kraken" })).toHaveAttribute("href", "https://blog.kraken.com/");
+    // The VIP events post is filtered out; the two trading posts stay.
+    await expect(page.locator(".story-source", { hasText: "Kraken" })).toHaveCount(2);
+  });
+
+  test("the sources page lists every feed with its status", async ({ page }) => {
+    await page.goto("/sources");
+    await expect(page.locator(".source-list li")).toHaveCount(13);
+    await expect(page.locator(".source-status .ok")).toHaveCount(13);
+    await expectAccessible(page);
+  });
+
+  test("the about page explains the site", async ({ page }) => {
+    await page.goto("/about");
+    await expect(page.getByRole("heading", { level: 1, name: "About Hashwire" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Networks" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Prices" })).toBeVisible();
+    await expectAccessible(page);
+  });
+});
+
+test.describe("search", () => {
+  test("finds stories from the search box", async ({ page }) => {
+    await page.goto("/");
+    const box = page.getByRole("searchbox", { name: "Search crypto news" });
+    await box.fill("canton");
+    await box.press("Enter");
+    await expect(page).toHaveURL(/\/search\?q=canton$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Results for “canton”");
+    await expect(page.getByRole("status")).toHaveText("1 story found.");
+    await expect(page.locator(".story")).toHaveCount(1);
+    await expect(box).toHaveValue("canton");
+  });
+
+  test("explains when nothing matches", async ({ page }) => {
+    await page.goto("/search?q=nothing-matches-this");
+    await expect(page.getByText(/Nothing matches every word/)).toBeVisible();
+    await expect(page.locator("meta[name=robots]")).toHaveAttribute("content", /noindex/);
+    await expectAccessible(page);
+  });
+
+  test("treats markup in the query as text", async ({ page }) => {
+    await page.goto("/search?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("<img src=x onerror=alert(1)>");
+    await expect(page.locator("main img")).toHaveCount(0);
+  });
+});
+
+test.describe("search engines", () => {
+  test("pages have a unique title, description, canonical URL and structured data", async ({ page }) => {
+    const seen = new Set<string>();
+    for (const path of ["/", "/networks", "/network/bitcoin", "/topic/markets", "/source/coindesk", "/sources", "/about"]) {
+      await page.goto(path);
+      const title = await page.title();
+      expect(seen.has(title), `duplicate title ${title}`).toBe(false);
+      seen.add(title);
+      expect(title).toContain("Hashwire");
+      const description = await page.locator('meta[name="description"]').getAttribute("content");
+      expect(description!.length).toBeGreaterThan(70);
+      expect(description!.length).toBeLessThanOrEqual(200);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `http://localhost:3000${path === "/" ? "" : path}`);
+      await expect(page.locator('meta[property="og:image"]').first()).toHaveAttribute("content", /opengraph-image/);
+      await expect(page.locator("h1")).toHaveCount(1);
+    }
+
+    await page.goto("/network/solana");
+    const data = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(data.map((d: { "@type": string }) => d["@type"])).toEqual(["CollectionPage", "BreadcrumbList"]);
+    expect(data[1].itemListElement.map((i: { name: string }) => i.name)).toEqual(["Hashwire", "Networks", "Solana"]);
+    expect(data[0].mainEntity.itemListElement.length).toBeGreaterThan(0);
+  });
+
+  test("the home page describes the site and its search", async ({ page }) => {
+    await page.goto("/");
+    const data = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(data[0]["@type"]).toBe("WebSite");
+    expect(data[0].potentialAction.target.urlTemplate).toContain("/search?q={search_term_string}");
+    expect(data[1].itemListElement).toHaveLength(10);
+    await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute("href", /\/feed\.xml$/);
+  });
+
+  test("sitemap, robots and feed are served", async ({ request }) => {
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    expect(sitemap.match(/<url>/g)).toHaveLength(1 + 1 + 22 + 8 + 13 + 2);
+    expect(sitemap).toContain("/network/hyperliquid");
+    expect(sitemap).not.toContain("/search");
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toContain("Sitemap: http://localhost:3000/sitemap.xml");
+    const feed = await request.get("/feed.xml");
+    expect(feed.headers()["content-type"]).toContain("application/rss+xml");
+    expect((await feed.text()).match(/<item>/g)).toHaveLength(50);
+  });
+
+  test("unknown pages return 404 with a way back", async ({ page, request }) => {
+    for (const path of ["/network/nope", "/topic/nope", "/source/nope", "/nope"]) {
+      expect((await request.get(path)).status(), path).toBe(404);
+    }
+    await page.goto("/network/nope");
+    await expect(page.getByRole("heading", { level: 1, name: "This page isn’t on the chain" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Go to today’s news" })).toBeVisible();
+  });
+});
+
+test.describe("security", () => {
+  test("sends a strict Content Security Policy with a fresh nonce", async ({ request }) => {
+    const first = await request.get("/");
+    const second = await request.get("/");
+    const csp = first.headers()["content-security-policy"];
+    expect(csp).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/);
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).not.toContain("unsafe-inline");
+    expect(second.headers()["content-security-policy"]).not.toBe(csp);
+    expect(first.headers()["x-frame-options"]).toBe("DENY");
+    expect(first.headers()["x-content-type-options"]).toBe("nosniff");
+    expect(first.headers()["strict-transport-security"]).toContain("max-age=");
+    expect(first.headers()["x-powered-by"]).toBeUndefined();
+  });
+
+  test("links to articles are plain http(s) links", async ({ page }) => {
+    await page.goto("/");
+    const hrefs = await page.locator(".story-title a, .lead-title a").evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+    expect(hrefs.length).toBeGreaterThan(40);
+    expect(hrefs.every((href) => /^https?:\/\//.test(href!))).toBe(true);
+  });
+});
+
+test("works without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page.locator(".lead-title")).toContainText("Crédit Mutuel");
+  await expect(page.getByRole("navigation", { name: "Networks" }).getByRole("link").first()).toContainText("Bitcoin");
+  await page.getByRole("searchbox", { name: "Search crypto news" }).fill("binance");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/search\?q=binance/);
+  expect(await page.locator(".story").count()).toBeGreaterThan(0);
+  await context.close();
+});
