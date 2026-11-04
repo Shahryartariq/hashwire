@@ -1,5 +1,5 @@
-/** Who publishes a feed: a network's own team, a newsroom, or an exchange. */
-export type SourceKind = "network" | "press" | "exchange";
+/** Who publishes a feed: a network's own team, a newsroom, a research, security or protocol team, or an exchange. */
+export type SourceKind = "network" | "press" | "research" | "exchange";
 
 export type TopicSlug =
   | "markets"

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   ...pageMeta("/sources", "Hashwire sources", description),
 };
 
-const KINDS: SourceKind[] = ["press", "network", "exchange"];
+const KINDS: SourceKind[] = ["press", "network", "research", "exchange"];
 
 export default async function SourcesPage() {
   const wire = await getWire();
