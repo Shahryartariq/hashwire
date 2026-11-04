@@ -23,7 +23,8 @@ Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15
 - **One story, all its coverage.** Reports of the same news are grouped automatically. A network team's own post leads when there is one, and the other coverage is listed under it.
 - **Official posts are marked**, so a network's own announcement is never confused with reporting about it.
 - **Eight topics:** markets, ETFs and institutions, regulation, DeFi, stablecoins, hacks and security, exchanges, development.
-- **Biggest 24-hour moves**, the most covered stories of the week, search, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), light and dark themes, and it works without JavaScript.
+- **Biggest 24-hour moves**, the most covered stories of the week, search, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
+- **Light, dark or system theme:** switch in the header. Your choice is saved in your browser and applied before the page paints, so a dark page never flashes white. Without a choice, the site follows your system setting.
 
 ### Sources
 
@@ -43,7 +44,7 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 | Feeds | RSS 2.0, RSS 1.0 and Atom parsed with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser); text cleaned with [entities](https://github.com/fb55/entities) |
 | Prices | CoinGecko `/simple/price`, one request for every network |
 | Caching | `unstable_cache`: each feed for 15 minutes, prices for 10 minutes |
-| Tests | Vitest (78 unit and API tests), Playwright (50 end-to-end runs on desktop and mobile), axe-core accessibility checks |
+| Tests | Vitest (83 unit and API tests), Playwright (64 end-to-end runs on desktop and mobile), axe-core accessibility checks |
 | CI | GitHub Actions: lint, type check, unit tests, build, end-to-end tests |
 | Hosting | Vercel |
 

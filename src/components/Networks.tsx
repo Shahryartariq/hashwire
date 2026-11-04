@@ -10,7 +10,7 @@ export function Dot({ slug }: { slug: string }) {
   const color = networkBySlug(slug)?.color ?? "currentColor";
   return (
     <svg className="dot" viewBox="0 0 10 10" aria-hidden="true">
-      <rect width="10" height="10" rx="2" fill={color} />
+      <rect x="0.5" y="0.5" width="9" height="9" rx="2" fill={color} />
     </svg>
   );
 }
