@@ -45,7 +45,7 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 | Feeds | RSS 2.0, RSS 1.0 and Atom parsed with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser); text cleaned with [entities](https://github.com/fb55/entities) |
 | Prices | CoinGecko `/simple/price`, one request for every network |
 | Caching | `unstable_cache`: each feed for 15 minutes, prices for 10 minutes |
-| Tests | Vitest (91 unit and API tests), Playwright (84 end-to-end runs on desktop and mobile), axe-core accessibility checks |
+| Tests | Vitest (93 unit and API tests), Playwright (86 end-to-end runs on desktop and mobile), axe-core accessibility checks |
 | CI | GitHub Actions: lint, type check, unit tests, build, end-to-end tests |
 | Hosting | Vercel |
 
