@@ -14,8 +14,8 @@ describe("site", () => {
     const saved = { ...process.env };
     process.env.SITE_URL = "";
     process.env.VERCEL = "1";
-    expect(siteUrl().toString()).toBe("https://tensorwire.vercel.app/");
-    expect(absolute("/topic/models")).toBe("https://tensorwire.vercel.app/topic/models");
+    expect(siteUrl().toString()).toBe("https://hashwire.vercel.app/");
+    expect(absolute("/topic/models")).toBe("https://hashwire.vercel.app/topic/models");
     process.env.SITE_URL = "https://ai.example.com";
     expect(siteUrl().toString()).toBe("https://ai.example.com/");
     process.env.SITE_URL = "";
@@ -37,10 +37,10 @@ describe("search", () => {
   );
 
   it("finds stories containing every word, in headlines or summaries", () => {
-    expect(search(clusters, "flashprove").length).toBe(1);
-    expect(search(clusters, "Pando git").length).toBe(1);
-    expect(search(clusters, "zkSNARK").length).toBe(1);
-    expect(search(clusters, "flashprove pando")).toEqual([]);
+    expect(search(clusters, "canton").length).toBe(1);
+    expect(search(clusters, "Glamsterdam Hoodi").length).toBe(2);
+    expect(search(clusters, "Lazarus").length).toBe(1);
+    expect(search(clusters, "canton glamsterdam")).toEqual([]);
   });
 
   it("ignores empty and symbol-only queries", () => {

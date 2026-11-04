@@ -8,7 +8,7 @@ import { TOPICS } from "@/lib/topics";
 
 export const metadata: Metadata = {
   title: "Search",
-  description: "Search the last three weeks of AI news on Tensorwire.",
+  description: "Search the last three weeks of crypto news on Hashwire.",
   // Result pages are endless near-duplicates; let search engines follow the links instead.
   robots: { index: false, follow: true },
   alternates: { canonical: "/search" },
@@ -54,7 +54,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                 </ul>
               </>
             ) : (
-              <p>Type a model, company or idea in the search box above, for example “agents” or “Gemini”.</p>
+              <p>Type a coin, company or idea in the search box above, for example “ETF”, “Binance” or “staking”.</p>
             )
           }
         />

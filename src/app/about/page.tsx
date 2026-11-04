@@ -3,17 +3,18 @@ import Link from "next/link";
 
 import { Coverage } from "@/components/Coverage";
 import { Frame } from "@/components/Frame";
+import { NETWORKS } from "@/lib/networks";
 import { SOURCE_URL, pageMeta } from "@/lib/site";
 import { SOURCES } from "@/lib/sources";
 import { TOPICS } from "@/lib/topics";
 
 const description =
-  "What Tensorwire is, where its AI news comes from, how stories are grouped and labelled, and how to get a story corrected or removed.";
+  "What Hashwire is, where its crypto news and prices come from, how stories are tagged by network and grouped, and how to get a story corrected or removed.";
 
 export const metadata: Metadata = {
   title: "About",
   description,
-  ...pageMeta("/about", "About Tensorwire", description),
+  ...pageMeta("/about", "About Hashwire", description),
 };
 
 export default function AboutPage() {
@@ -21,30 +22,51 @@ export default function AboutPage() {
     <Frame>
       <div className="band band-short">
         <div className="band-inner">
-          <h1>About Tensorwire</h1>
+          <h1>About Hashwire</h1>
           <div className="band-intro">
-            <p>One page for the day&apos;s AI news, so you can see what happened without opening eighteen tabs.</p>
+            <p>Crypto news sorted by blockchain, so you can follow the networks you care about without the noise.</p>
           </div>
         </div>
       </div>
       <div className="page-body prose">
         <h2>Where the news comes from</h2>
         <p>
-          Tensorwire reads the public RSS and Atom feeds of {SOURCES.length} <Link href="/sources">sources</Link>: lab
-          and company blogs such as OpenAI, Google DeepMind and Hugging Face, newsrooms such as TechCrunch, The Verge and
-          MIT Technology Review, and independent builders such as Simon Willison and Latent Space. Each feed is read again
-          every 15 minutes.
+          Hashwire reads the public RSS feeds of {SOURCES.length} <Link href="/sources">sources</Link> every 15 minutes:
+          newsrooms such as CoinDesk, The Block and Cointelegraph, the networks&apos; own teams such as the Ethereum
+          Foundation, Bitcoin Optech and Solana, and Kraken&apos;s listing announcements.
         </p>
         <p>
           For each story you see the headline, a short excerpt when the feed provides one, the source and the time. The
-          headline links to the original article. Tensorwire never copies full articles.
+          headline links to the original article. Hashwire never copies full articles.
+        </p>
+
+        <h2>Networks</h2>
+        <p>
+          Every story is tagged with the blockchains it&apos;s about, from its headline, summary and the feed&apos;s own
+          categories. Each of the {NETWORKS.length} <Link href="/networks">networks</Link> has its own page with only its
+          news. Posts from a network&apos;s own team are always tagged with that network.
+        </p>
+        <p>
+          Some names are ordinary words, so they count only in phrases that can&apos;t mean anything else: “Base” in
+          “on Base” or “Base app”, “Avalanche” in “Avalanche network”, “Optimism” in “OP Mainnet”. “DOGE” alone isn&apos;t
+          counted, because it&apos;s also a US government department.
+        </p>
+
+        <h2>Prices</h2>
+        <p>
+          Prices, 24-hour changes and market caps come from{" "}
+          <a href="https://www.coingecko.com/" rel="noopener">
+            CoinGecko
+          </a>{" "}
+          and are refreshed every 10 minutes. They&apos;re for orientation, not trading decisions. Nothing on Hashwire is
+          investment advice.
         </p>
 
         <h2>How stories are grouped</h2>
         <p>
-          When several sources report the same news, it appears once. The original announcement leads when a lab
-          published it; otherwise the first report does. The other coverage is listed under it, and the cells show how
-          many sources picked it up:
+          When several sources report the same news, it appears once. A network team&apos;s own post leads when there is
+          one; otherwise the first report does. The other coverage is listed under it, and the cells show how many
+          sources picked it up:
         </p>
         <ul className="legend">
           <li>
@@ -55,13 +77,13 @@ export default function AboutPage() {
           </li>
         </ul>
         <p>
-          Grouping is automatic: two stories go together when their headlines share most of their words, or when both
-          use names no other story uses. It sometimes misses a match; it rarely makes a wrong one.
+          Grouping is automatic: two stories go together when their headlines share most of their words, or when they
+          share several words no other story uses. It sometimes misses a match; it rarely makes a wrong one.
         </p>
 
         <h2>Labels</h2>
         <p>
-          <span className="official">Official</span> marks a post the company published itself. Topics (
+          <span className="official">Official</span> marks a post from a network&apos;s own team. Topics (
           {TOPICS.map((t) => t.name.toLowerCase()).join(", ")}) come from keyword rules on the headline and summary.
         </p>
 
@@ -74,7 +96,7 @@ export default function AboutPage() {
 
         <h2>Corrections and removal</h2>
         <p>
-          If you publish one of these feeds and want it removed, or a story is labelled or grouped wrongly, please{" "}
+          If you publish one of these feeds and want it removed, or a story is tagged or grouped wrongly, please{" "}
           <a href={`${SOURCE_URL}/issues`} rel="noopener">
             open an issue on GitHub
           </a>
@@ -83,11 +105,15 @@ export default function AboutPage() {
 
         <h2>Who made this</h2>
         <p>
-          Tensorwire is built by{" "}
+          Hashwire is built by{" "}
           <a href="https://github.com/Shahryartariq" rel="noopener">
             Muhammad Shehryar
           </a>
-          , a full-stack developer, with Next.js and TypeScript. The <a href={SOURCE_URL}>source code</a> is open.
+          , a full-stack developer, with Next.js and TypeScript. It&apos;s the sister site of{" "}
+          <a href="https://tensorwire.vercel.app" rel="noopener">
+            Tensorwire
+          </a>{" "}
+          for AI news. The <a href={SOURCE_URL}>source code</a> is open.
         </p>
       </div>
     </Frame>

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { clusterStories, leadCluster, mostCovered } from "./cluster";
+import { NETWORKS, networkBySlug, networksFor } from "./networks";
 import { SAMPLE_NOW, sampleItems } from "./sample";
 import { SOURCES, sourceBySlug } from "./sources";
-import { MAX_AGE, PER_SOURCE, toStories } from "./stories";
+import { MAX_AGE, PER_SOURCE, cleanSummary, toStories } from "./stories";
 import { excerpt, hashId, plainText, safeUrl, tokens, urlKey } from "./text";
 import { ago, agoLong, bucketize, formatDate } from "./time";
 import { TOPICS, topicBySlug, topicsFor } from "./topics";
@@ -14,17 +15,17 @@ const NOW = Date.UTC(2026, 10, 4, 6);
 const SOURCE_MAP = new Map(SOURCES.map((s) => [s.slug, s]));
 
 const item = (overrides: Partial<RawItem> = {}): RawItem => ({
-  title: "A new open-weight model",
+  title: "Bitcoin rallies as ETF inflows return",
   link: "https://example.com/a",
   date: NOW - HOUR,
-  summary: "<p>A long enough summary about a new model that was released today by a lab.</p>",
+  summary: "<p>A long enough summary about bitcoin prices moving higher as spot ETF inflows return this week.</p>",
   categories: [],
   ...overrides,
 });
 
 const testSource: Source = {
   slug: "test",
-  name: "Test",
+  name: "Test News",
   homepage: "https://example.com/",
   feed: "https://example.com/feed",
   kind: "press",
@@ -74,13 +75,15 @@ describe("text", () => {
   });
 });
 
+
 describe("stories", () => {
-  it("cleans titles and summaries and keeps a link to the original", () => {
-    const [story] = toStories(testSource, [item({ title: "Model &amp; agents <b>news</b>" })], NOW);
-    expect(story.title).toBe("Model & agents news");
+  it("cleans titles and summaries, tags networks and topics, and keeps a link to the original", () => {
+    const [story] = toStories(testSource, [item({ title: "Bitcoin &amp; Solana <b>rally</b>" })], NOW);
+    expect(story.title).toBe("Bitcoin & Solana rally");
     expect(story.summary).toMatch(/^A long enough summary/);
     expect(story.url).toBe("https://example.com/a");
-    expect(story.topics).toContain("models");
+    expect(story.networks).toEqual(["bitcoin", "solana"]);
+    expect(story.topics).toContain("markets");
   });
 
   it("drops items without a title, link or date, and items that are too old or far in the future", () => {
@@ -107,31 +110,89 @@ describe("stories", () => {
     expect(new Set(stories.map((s) => s.id)).size).toBe(PER_SOURCE);
   });
 
+  it("strips the boilerplate some feeds wrap around summaries", () => {
+    expect(cleanSummary("Test News Big headline The real summary.", "Big headline", "Test News")).toBe("The real summary.");
+    expect(cleanSummary("▶ Test News Video The talk.", "Video", "Test News")).toBe("The talk.");
+    expect(cleanSummary("The real summary. Read the full story on CryptoSlate Understand more", "x", "y")).toBe("The real summary.");
+    expect(cleanSummary("Text. The post Title appeared first on Site.", "x", "y")).toBe("Text.");
+
+    const bm = toStories(sourceBySlug("bitcoin-magazine")!, sampleItems("bitcoin-magazine"), SAMPLE_NOW);
+    expect(bm[0].summary).toBe("Tether CEO Paolo Ardoino said in Lugano that the company holds about 150,000 bitcoin.");
+  });
+
   it("hides summaries that are captions, categories or boilerplate", () => {
     const short = toStories(testSource, [item({ summary: "Overview" })], NOW)[0];
-    const category = toStories(testSource, [item({ summary: "General Science and Health", categories: ["General Science and Health"] })], NOW)[0];
-    const hn = toStories(testSource, [item({ summary: "Article URL: https://x.example Comments URL: https://news.example" })], NOW)[0];
+    const category = toStories(testSource, [item({ summary: "Crypto Ecosystems and Companies", categories: ["Crypto Ecosystems and Companies"] })], NOW)[0];
     const off = toStories({ ...testSource, summaries: false }, [item()], NOW)[0];
-    expect([short, category, hn, off].every((s) => s.summary === undefined)).toBe(true);
+    expect([short, category, off].every((s) => s.summary === undefined)).toBe(true);
   });
 
   it("applies each source's own filter", () => {
-    const nvidia = sourceBySlug("nvidia")!;
-    const gaming = item({ title: "GFN Thursday: new games", categories: ["Gaming", "GeForce NOW"] });
-    const ai = item({ title: "AI factories explained", link: "https://example.com/b", categories: ["AI"] });
-    expect(toStories(nvidia, [gaming, ai], NOW).map((s) => s.title)).toEqual(["AI factories explained"]);
+    const kraken = sourceBySlug("kraken")!;
+    const listing = item({ title: "EURCV is available for trading!", categories: ["Asset Listings"] });
+    const vip = item({ title: "Our VIP summer", link: "https://example.com/vip", categories: ["Kraken VIP"] });
+    expect(toStories(kraken, [listing, vip], NOW).map((s) => s.title)).toEqual(["EURCV is available for trading!"]);
 
-    const mit = sourceBySlug("mit-technology-review")!;
-    expect(toStories(mit, [item({ categories: ["Artificial intelligence", "sponsored"] })], NOW)).toHaveLength(0);
+    const decrypt = sourceBySlug("decrypt")!;
+    expect(toStories(decrypt, [item({ categories: ["Artificial Intelligence"] })], NOW)).toHaveLength(0);
 
-    const simon = sourceBySlug("simon-willison")!;
-    expect(toStories(simon, [item({ categories: ["python", "uv"] })], NOW)).toHaveLength(0);
-    expect(toStories(simon, [item({ categories: ["llms"] })], NOW)).toHaveLength(1);
+    const block = sourceBySlug("the-block")!;
+    expect(toStories(block, [item({ link: "https://www.theblock.co/learn/defi/x" })], NOW)).toHaveLength(0);
+    expect(toStories(block, [item({ categories: ["campus"] })], NOW)).toHaveLength(0);
+
+    const cointelegraph = sourceBySlug("cointelegraph")!;
+    expect(toStories(cointelegraph, [item({ title: "Here’s what happened in crypto today" })], NOW)).toHaveLength(0);
   });
 
-  it("keeps a discussion link when the feed has one", () => {
-    const [story] = toStories(testSource, [item({ comments: "https://news.ycombinator.com/item?id=1" })], NOW);
-    expect(story.discussion).toBe("https://news.ycombinator.com/item?id=1");
+  it("tags every post from a network's own blog with that network", () => {
+    const optech = toStories(sourceBySlug("bitcoin-optech")!, sampleItems("bitcoin-optech"), SAMPLE_NOW);
+    expect(optech.every((s) => s.networks[0] === "bitcoin")).toBe(true);
+    const base = toStories(sourceBySlug("base")!, sampleItems("base"), SAMPLE_NOW);
+    expect(base.every((s) => s.networks[0] === "base")).toBe(true);
+  });
+});
+
+describe("networks", () => {
+  it("has unique slugs, a description and a valid colour for each network", () => {
+    expect(NETWORKS.length).toBe(22);
+    expect(new Set(NETWORKS.map((n) => n.slug)).size).toBe(NETWORKS.length);
+    expect(new Set(NETWORKS.map((n) => n.coingecko).filter(Boolean)).size).toBe(NETWORKS.filter((n) => n.coingecko).length);
+    for (const network of NETWORKS) {
+      expect(network.slug).toMatch(/^[a-z]+(-[a-z]+)*$/);
+      expect(network.color).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(network.about.length).toBeGreaterThan(40);
+      expect(networkBySlug(network.slug)).toBe(network);
+    }
+  });
+
+  it.each([
+    ["Bitcoin surges to $78,300 in V-shaped comeback", ["bitcoin"]],
+    ["Glamsterdam on Hoodi Postponed", ["ethereum"]],
+    ["Binance hackers move 81% of stolen SOL", ["solana"]],
+    ["Coinbase XRP looked cheap on Nov. 2", ["xrp-ledger"]],
+    ["USDG deposits now available on Arbitrum One", ["arbitrum"]],
+    ["How Shopify brought stablecoin payments to checkout on Base", ["base"]],
+    ["Ava Labs ships a new Avalanche L1 toolkit", ["avalanche"]],
+    ["Hyperliquid volume hits a record as HYPE rallies", ["hyperliquid"]],
+    ["$LINK and $ETH lead the rebound", ["ethereum", "chainlink"]],
+  ])("tags “%s”", (title, networks) => {
+    expect(networksFor(title, "", [])).toEqual(networks);
+  });
+
+  it.each([
+    "DOGE cuts government spending again",
+    "A wave of optimism lifts markets",
+    "An avalanche of liquidations hit traders",
+    "Banks raise their base rates",
+    "Polls show the race is near even",
+    "Bitcoin's layer 2 race heats up",
+  ])("doesn't read a network into “%s” by mistake", (title) => {
+    const found = networksFor(title, "", []);
+    expect(found.filter((n) => ["dogecoin", "optimism", "avalanche", "base", "near", "ethereum"].includes(n))).toEqual([]);
+  });
+
+  it("puts the source's own network first, then headline mentions, then the rest, at most four", () => {
+    expect(networksFor("Sui vs Aptos", "Solana and Ethereum and Cardano", [], "sui")).toEqual(["sui", "aptos", "ethereum", "solana"]);
   });
 });
 
@@ -147,21 +208,21 @@ describe("topics", () => {
   });
 
   it.each([
-    ["Gemini 4 Carbon: Our next frontier model", "models"],
-    ["Coding agents now use computer use and MCP", "agents"],
-    ["Tencent releases an Apache 2.0 vision model on Hugging Face", "open-source"],
-    ["Researchers publish a paper on interpretability", "research"],
-    ["Apple starts giving Siri AI access to third-party apps", "products"],
-    ["Data centers turn to old jet engines for power", "hardware"],
-    ["Court rules on AI copyright lawsuit", "policy"],
-    ["AI inference startup Fal raises $1.3 billion", "business"],
+    ["Bitcoin bounces from 7-week low as liquidations near $300 million", "markets"],
+    ["Bitcoin ETFs lose $1.16B as Bitwise calls selling short-term", "institutions"],
+    ["SEC division views Canton Coin as digital commodity in no-action letter", "regulation"],
+    ["Aave unlocks stock-backed loans with new lending markets", "defi"],
+    ["Circle Payments Network reaches $41.3 billion in USDC volume", "stablecoins"],
+    ["Binance says $6.34 billion hack began with fake job interview", "security"],
+    ["EURCV is available for trading on Kraken", "exchanges"],
+    ["Glamsterdam upgrade on the Hoodi testnet postponed", "development"],
   ] as const)("tags “%s” as %s", (title, topic) => {
     expect(topicsFor(title, "", [])).toContain(topic);
   });
 
   it("prefers headline matches and returns at most three topics", () => {
-    const topics = topicsFor("New model", "agents, open-source research about chips and a lawsuit and funding", []);
-    expect(topics[0]).toBe("models");
+    const topics = topicsFor("A new stablecoin", "hack, lawsuit, ETF, staking and an upgrade", []);
+    expect(topics[0]).toBe("stablecoins");
     expect(topics.length).toBeLessThanOrEqual(3);
     expect(topicsFor("A quiet day", "", [])).toEqual([]);
   });
@@ -173,37 +234,34 @@ describe("grouping", () => {
   const groupOf = (title: string) => clusters.find((c) => c.stories.some((s) => s.title.startsWith(title)))!;
 
   it("puts reports of the same news together", () => {
-    expect(groupOf("Anthropic is working on a system to prove").sources.sort()).toEqual(["marktechpost", "techcrunch"]);
-    expect(groupOf("Google will let schools disable").sources.sort()).toEqual(["ars-technica", "techcrunch"]);
+    expect(groupOf("French bank Crédit Mutuel").sources.sort()).toEqual(["coindesk", "decrypt", "the-block"]);
+    expect(groupOf("Morgan Stanley says").sources.sort()).toEqual(["coindesk", "the-block", "the-defiant"]);
+    expect(groupOf("Justin Sun seeks").sources.sort()).toEqual(["cointelegraph", "cryptoslate", "decrypt"]);
+    expect(groupOf("SEC division views Canton Coin").sources.sort()).toEqual(["cryptoslate", "the-block"]);
   });
 
-  it("lets the lab's own post lead its coverage", () => {
-    const pando = groupOf("Scaling Git at OpenAI");
-    expect(pando.lead.source).toBe("openai");
-    expect(pando.stories.map((s) => s.source)).toEqual(["openai", "marktechpost"]);
+  it("doesn't merge stories that only share common crypto words", () => {
+    // "ruling party" and "SEC ruling" share a word, not a story.
+    expect(groupOf("South Korea’s ruling party").stories).toHaveLength(1);
+    expect(groupOf("New Jersey Drops Coinbase Staking Order").stories).toHaveLength(1);
+    expect(groupOf("Bitcoin rebounds from midterm dip").stories).toHaveLength(1);
   });
 
-  it("doesn't merge different stories that share common words", () => {
-    expect(groupOf("Claude’s new rules against game cloning").stories).toHaveLength(1);
-    expect(groupOf("Building ultra-low-latency voice AI").stories).toHaveLength(1);
-  });
-
-  it("never groups round-up newsletters or two stories from one source", () => {
+  it("never groups two stories from one source", () => {
     for (const cluster of clusters) {
       expect(new Set(cluster.stories.map((s) => s.source)).size).toBe(cluster.stories.length);
-      if (cluster.stories.length > 1) {
-        expect(cluster.sources.some((s) => SOURCE_MAP.get(s)?.digest)).toBe(false);
-      }
     }
   });
 
-  it("keeps every story exactly once, newest groups first", () => {
+  it("keeps every story exactly once, newest groups first, with the networks of every report", () => {
     expect(clusters.flatMap((c) => c.stories)).toHaveLength(stories.length);
     expect(clusters.map((c) => c.latest)).toEqual([...clusters.map((c) => c.latest)].sort((a, b) => b - a));
+    const tether = groupOf("Tether Holds 150,000 Bitcoin");
+    expect(tether.networks).toContain("bitcoin");
   });
 
   it("leads with the most covered recent story and ranks coverage", () => {
-    expect(leadCluster(clusters, SAMPLE_NOW)?.sources.length).toBe(2);
+    expect(leadCluster(clusters, SAMPLE_NOW)?.lead.title).toMatch(/Crédit Mutuel/);
     const ranked = mostCovered(clusters, SAMPLE_NOW);
     expect(ranked.length).toBeGreaterThan(2);
     expect(ranked.every((c) => c.sources.length > 1)).toBe(true);
@@ -230,6 +288,7 @@ describe("time", () => {
   });
 });
 
+
 describe("sources", () => {
   it("has unique slugs, https feeds and a description for each", () => {
     expect(new Set(SOURCES.map((s) => s.slug)).size).toBe(SOURCES.length);
@@ -237,6 +296,7 @@ describe("sources", () => {
       expect(source.slug).toMatch(/^[a-z]+(-[a-z]+)*$/);
       expect(source.feed.startsWith("https://")).toBe(true);
       expect(source.about.length).toBeGreaterThan(30);
+      if (source.network) expect(networkBySlug(source.network), source.slug).toBeDefined();
     }
   });
 

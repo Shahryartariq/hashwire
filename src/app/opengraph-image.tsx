@@ -1,9 +1,9 @@
 import { OG_SIZE, ogImage } from "@/lib/og";
 
-export const alt = "Tensorwire: today's AI news from the labs and the press";
+export const alt = "Hashwire: crypto and blockchain news, network by network";
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
 export default function Image() {
-  return ogImage("Today's AI news, in one feed", "18 sources, updated every 15 minutes");
+  return ogImage("Crypto news, network by network", "22 blockchains, 13 sources, prices every 10 minutes");
 }

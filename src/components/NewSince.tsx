@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const KEY = "tensorwire:seen";
+const KEY = "hashwire:seen";
 
 /**
  * Marks stories that arrived since the reader's last visit. Remembers only the time of the

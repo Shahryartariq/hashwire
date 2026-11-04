@@ -1,14 +1,14 @@
-export const SITE_NAME = "Tensorwire";
+export const SITE_NAME = "Hashwire";
 
-export const TAGLINE = "AI news from the labs and the press, in one fast feed.";
+export const TAGLINE = "Crypto and blockchain news, network by network.";
 
 export const SITE_DESCRIPTION =
-  "Today's AI news in one place: model releases, research, agents, chips and policy from OpenAI, Google DeepMind, Hugging Face, TechCrunch, The Verge and 13 more sources. Updated every 15 minutes.";
+  "Crypto news by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with prices, from CoinDesk, The Block, Cointelegraph and the networks' own teams. Updated every 15 minutes.";
 
 export const AUTHOR = { name: "Muhammad Shehryar", url: "https://github.com/Shahryartariq" };
-export const SOURCE_URL = "https://github.com/Shahryartariq/tensorwire";
+export const SOURCE_URL = "https://github.com/Shahryartariq/hashwire";
 
-export const PRODUCTION_URL = "https://tensorwire.vercel.app";
+export const PRODUCTION_URL = "https://hashwire.vercel.app";
 
 /**
  * The public address of the site, for canonical links, the sitemap and social cards.
@@ -33,7 +33,7 @@ export function pageMeta(path: string, title: string, description: string, image
   return {
     alternates: {
       canonical: path,
-      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest AI news` }] },
+      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }] },
     },
     openGraph: {
       type: "website" as const,

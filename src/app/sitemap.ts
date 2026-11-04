@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { fromSource, getWire, inTopic, official } from "@/lib/load";
+import { fromSource, getWire, inNetwork, inTopic } from "@/lib/load";
+import { NETWORKS } from "@/lib/networks";
 import { absolute } from "@/lib/site";
 import { SOURCES } from "@/lib/sources";
 import { TOPICS } from "@/lib/topics";
@@ -16,7 +17,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const all = wire.clusters;
   return [
     { url: absolute("/"), lastModified: newest(all), changeFrequency: "hourly", priority: 1 },
-    { url: absolute("/labs"), lastModified: newest(all.filter(official)), changeFrequency: "hourly", priority: 0.8 },
+    { url: absolute("/networks"), lastModified: newest(all), changeFrequency: "hourly", priority: 0.9 },
+    ...NETWORKS.map((network) => ({
+      url: absolute(`/network/${network.slug}`),
+      lastModified: newest(all.filter((c) => inNetwork(c, network.slug))),
+      changeFrequency: "hourly" as const,
+      priority: 0.9,
+    })),
     ...TOPICS.map((topic) => ({
       url: absolute(`/topic/${topic.slug}`),
       lastModified: newest(all.filter((c) => inTopic(c, topic.slug))),

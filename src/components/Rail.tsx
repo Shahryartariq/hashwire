@@ -58,11 +58,12 @@ export function AboutPanel() {
         How this works
       </h2>
       <p>
-        Tensorwire reads 18 AI news feeds every 15 minutes. When several outlets report the same news, you see it once,
-        with every source listed. Lab and company posts are marked <span className="official">Official</span>.
+        Hashwire reads 13 crypto news feeds every 15 minutes and sorts every story by the networks it mentions. When
+        several outlets report the same news, you see it once. Posts from a network&apos;s own team are marked{" "}
+        <span className="official">Official</span>.
       </p>
       <p>
-        <Link href="/about">More about Tensorwire</Link> or <a href="/feed.xml">follow the RSS feed</a>.
+        <Link href="/about">More about Hashwire</Link> or <a href="/feed.xml">follow the RSS feed</a>.
       </p>
     </section>
   );

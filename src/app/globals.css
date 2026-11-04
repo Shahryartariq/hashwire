@@ -1,43 +1,49 @@
 /*
- * Tensorwire
- * Navy masthead band for the lead story, cool paper for the wire, and one highlighter yellow
- * used only where it carries meaning: lit coverage cells, the current section, new stories,
- * hover and focus.
+ * Hashwire
+ * Aubergine masthead band for the lead story and the network strip, lavender-grey paper for
+ * the wire, and one amber used only where it carries meaning: lit coverage cells, the newest
+ * block in the mark, the current section, new stories, hover and focus. Prices rise in green
+ * with ▲ and fall in red with ▼, so colour is never the only signal.
  */
 
 :root {
-  --paper: #f3f5f9;
+  --paper: #f5f4f7;
   --surface: #ffffff;
-  --ink: #0f1630;
-  --muted: #4f5875;
-  --rule: #d9dee9;
-  --visited: #5b5f8a;
+  --ink: #1a1324;
+  --muted: #5e566b;
+  --rule: #e1dde6;
+  --visited: #6e5a86;
 
-  --band: #101735;
+  --band: #1e1030;
   --band-ink: #ffffff;
-  --band-muted: #c3cae4;
-  --band-rule: #2a3460;
-  --band-field: #1a2247;
+  --band-muted: #cfc3dd;
+  --band-rule: #3a2853;
+  --band-field: #2a1a40;
 
-  --mark: #ffe14d;
-  --mark-ink: #101735;
-  --highlight: #ffe14d;
+  --mark: #ffa62b;
+  --mark-ink: #1e1030;
+  --highlight: #ffc56b;
 
-  --cell-off: #d3d9e6;
-  --cell-on: #101735;
-  --band-cell-off: #3a4570;
+  --cell-off: #ddd6e5;
+  --cell-on: #1e1030;
+  --band-cell-off: #4a3963;
+
+  --up: #0b7a44;
+  --down: #c0262d;
+  --band-up: #6ee7a0;
+  --band-down: #ff9b9b;
 
   --official: #0a7559;
   --official-bg: #e2f4ee;
   --warn: #9a3412;
 
-  --font: "Schibsted Grotesk Variable", "Schibsted Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --step--1: 0.8125rem;
   --step-0: 1rem;
   --step-1: 1.125rem;
   --step-2: 1.375rem;
-  --step-3: 2.25rem;
-  --lead: clamp(1.75rem, 1.15rem + 2.4vw, 3rem);
+  --step-3: 2.5rem;
+  --lead: clamp(1.9rem, 1.2rem + 2.8vw, 3.4rem);
 
   --gutter: clamp(1rem, 0.6rem + 1.8vw, 2rem);
   --max: 76rem;
@@ -47,22 +53,25 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0a0f22;
-    --surface: #111834;
-    --ink: #e8ecf7;
-    --muted: #a3acc8;
-    --rule: #232c52;
-    --visited: #a59fd6;
+    --paper: #120b1c;
+    --surface: #1a1127;
+    --ink: #eee8f5;
+    --muted: #b3a8c2;
+    --rule: #2e2240;
+    --visited: #c3a9e6;
 
-    --band: #060a19;
-    --band-rule: #1e2747;
-    --band-field: #121a38;
+    --band: #0b0614;
+    --band-rule: #2a1d3d;
+    --band-field: #1a1127;
 
-    --highlight: rgb(255 225 77 / 0.32);
+    --highlight: rgb(255 166 43 / 0.35);
 
-    --cell-off: #2a3358;
-    --cell-on: #e8ecf7;
-    --band-cell-off: #2a3358;
+    --cell-off: #3a2c4f;
+    --cell-on: #eee8f5;
+    --band-cell-off: #3a2c4f;
+
+    --up: #4ade80;
+    --down: #ff8a8a;
 
     --official: #43cfa5;
     --official-bg: rgb(67 207 165 / 0.12);
@@ -202,6 +211,11 @@ main:focus {
   font-weight: 800;
   letter-spacing: -0.02em;
   text-decoration: none;
+}
+
+.mark-wire {
+  stroke: var(--band-cell-off);
+  stroke-width: 2;
 }
 
 .mark-cell {
@@ -593,6 +607,9 @@ main:focus {
 
 .wire-group + .wire-group {
   margin-top: 2rem;
+  /* Groups below the first are skipped for layout and paint until they're near the screen. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1600px;
 }
 
 .wire-heading {
@@ -1056,4 +1073,333 @@ main:focus {
     background: none !important;
     color: #000 !important;
   }
+}
+
+/* ---------- Hashwire: condensed display type ---------- */
+
+.brand,
+.band h1,
+.lead-title,
+.footer-brand {
+  font-stretch: 78%;
+}
+
+.band h1 {
+  letter-spacing: -0.015em;
+}
+
+.lead-title {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Networks: dots, chips, prices ---------- */
+
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+}
+
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  font-size: var(--step--1);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.band .chip {
+  color: var(--band-ink);
+  background: transparent;
+  border-color: var(--band-rule);
+}
+
+.band .chip:hover {
+  border-color: var(--mark);
+}
+
+.change {
+  /* Keeps the visually hidden text inside scrolling lists like the network strip. */
+  position: relative;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.change .arrow {
+  margin-right: 0.2em;
+  font-size: 0.75em;
+}
+
+.change-up {
+  color: var(--up);
+}
+
+.change-down {
+  color: var(--down);
+}
+
+.change-flat {
+  color: var(--muted);
+}
+
+.band .change-up {
+  color: var(--band-up);
+}
+
+.band .change-down {
+  color: var(--band-down);
+}
+
+.band .change-flat {
+  color: var(--band-muted);
+}
+
+.quote {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.price {
+  font-weight: 600;
+}
+
+.quote-none {
+  font-size: var(--step--1);
+  color: var(--band-muted);
+}
+
+.symbol {
+  padding: 0.05rem 0.4rem;
+  font-size: 0.55em;
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+/* The strip of networks along the bottom of the front-page band. */
+.strip {
+  border-bottom: 1px solid var(--band-rule);
+}
+
+.strip ul {
+  display: flex;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--band-cell-off) transparent;
+}
+
+.strip li {
+  position: relative;
+  flex: none;
+}
+
+.strip a {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 1.25rem 0.75rem 0;
+  margin-right: 1.25rem;
+  color: var(--band-ink);
+  text-decoration: none;
+  border-right: 1px solid var(--band-rule);
+}
+
+.strip a:hover .strip-name {
+  text-decoration: underline;
+  text-decoration-color: var(--mark);
+  text-decoration-thickness: 2px;
+}
+
+.strip-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.strip .quote {
+  font-size: var(--step--1);
+  color: var(--band-muted);
+}
+
+.strip-all a {
+  align-content: center;
+  height: 100%;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border-right: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--mark);
+  text-underline-offset: 0.25em;
+}
+
+/* Network page: heading and price block. */
+.network-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.network-heading .dot {
+  width: 0.5em;
+  height: 0.5em;
+}
+
+.price-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 2.25rem;
+  margin: 1rem 0 0;
+}
+
+.price-block div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.price-block dt {
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--band-muted);
+}
+
+.price-block dd {
+  margin: 0;
+  font-size: var(--step-2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-block .price-big {
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  font-stretch: 85%;
+  line-height: 1.1;
+}
+
+.price-block .price-source {
+  align-self: end;
+}
+
+.price-block .price-source dd {
+  font-size: var(--step--1);
+  font-weight: 500;
+  color: var(--band-muted);
+}
+
+/* Networks page table. */
+.table-wrap {
+  overflow-x: auto;
+  border-top: 2px solid var(--ink);
+}
+
+.networks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.networks-table th,
+.networks-table td {
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.networks-table thead th {
+  font-size: var(--step--1);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.networks-table .num {
+  text-align: right;
+}
+
+.networks-table tbody th {
+  font-weight: 700;
+}
+
+.table-network {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.table-network:hover span:nth-child(2) {
+  text-decoration: underline;
+}
+
+.networks-table .symbol {
+  font-size: 0.7rem;
+}
+
+.networks-table tbody tr:hover {
+  background: var(--surface);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.table-note,
+.note {
+  margin-top: 1rem;
+  font-size: var(--step--1);
+  color: var(--muted);
+}
+
+.note {
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 40rem) {
+  .hide-small {
+    display: none;
+  }
+
+  .networks-table th,
+  .networks-table td {
+    padding-inline: 0.4rem;
+  }
+}
+
+/* Side column: biggest moves. */
+.movers a {
+  align-items: center;
+}
+
+.mover-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }

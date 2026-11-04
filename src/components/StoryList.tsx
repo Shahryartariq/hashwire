@@ -4,6 +4,7 @@ import { topicBySlug } from "@/lib/topics";
 import type { Cluster } from "@/lib/types";
 
 import { Coverage } from "./Coverage";
+import { NetworkChip } from "./Networks";
 
 /** "A", "A and B", "A, B and C" */
 export function listNames(names: string[]): string {
@@ -37,7 +38,7 @@ export function StoryRow({ cluster, now }: { cluster: Cluster; now: number }) {
           <a href={`/source/${lead.source}`} className="story-source">
             {sourceName(lead.source)}
           </a>
-          {source?.kind === "lab" && <span className="official">Official</span>}
+          {source?.kind === "network" && <span className="official">Official</span>}
           {others.length > 0 && (
             <span className="also">
               Also in{" "}
@@ -53,6 +54,14 @@ export function StoryRow({ cluster, now }: { cluster: Cluster; now: number }) {
             <a href={lead.discussion} className="discussion">
               Discussion
             </a>
+          )}
+          {cluster.networks.length > 0 && (
+            <span className="chips">
+              <span className="visually-hidden">Networks: </span>
+              {cluster.networks.map((slug) => (
+                <NetworkChip key={slug} slug={slug} />
+              ))}
+            </span>
           )}
           {cluster.topics.length > 0 && (
             <span className="tags">

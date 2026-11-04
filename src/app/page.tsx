@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Frame } from "@/components/Frame";
 import { Lead } from "@/components/Lead";
+import { Movers, NetworkStrip } from "@/components/Networks";
 import { NewSince } from "@/components/NewSince";
 import { AboutPanel, MostCovered, TopicIndex } from "@/components/Rail";
 import { Outage, Status } from "@/components/Status";
@@ -11,13 +12,13 @@ import { getWire } from "@/lib/load";
 import { SITE_DESCRIPTION, SITE_NAME, absolute, jsonLd, pageMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: `${SITE_NAME}: today's AI news from the labs and the press` },
+  title: { absolute: `${SITE_NAME}: crypto and blockchain news, network by network` },
   description: SITE_DESCRIPTION,
-  ...pageMeta("/", `${SITE_NAME}: today's AI news`, SITE_DESCRIPTION),
+  ...pageMeta("/", `${SITE_NAME}: crypto news by blockchain`, SITE_DESCRIPTION),
 };
 
 /** Stories shown on the home page; older ones live on the topic and source pages. */
-const HOME_LIMIT = 50;
+const HOME_LIMIT = 40;
 
 export default async function HomePage() {
   const wire = await getWire();
@@ -40,7 +41,7 @@ export default async function HomePage() {
     {
       "@context": "https://schema.org",
       "@type": "ItemList",
-      name: "Latest AI news",
+      name: "Latest crypto news",
       itemListElement: [lead, ...rest]
         .filter((c) => c !== undefined)
         .slice(0, 10)
@@ -52,9 +53,10 @@ export default async function HomePage() {
     <Frame active="home" sample={wire.sample}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structured) }} />
       <div className="band">
+        {wire.prices.ok && <NetworkStrip prices={wire.prices} />}
         <div className="band-inner">
           <div className="band-heading">
-            <h1>Today in AI</h1>
+            <h1>Crypto news today</h1>
             <Status wire={wire} />
             <NewSince newest={wire.clusters[0]?.latest ?? 0} />
           </div>
@@ -71,6 +73,7 @@ export default async function HomePage() {
         </div>
         <aside className="column-side" aria-label="More ways in">
           <MostCovered clusters={wire.clusters} now={wire.now} />
+          <Movers prices={wire.prices} />
           <TopicIndex clusters={wire.clusters} />
           <AboutPanel />
         </aside>
