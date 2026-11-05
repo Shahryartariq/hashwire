@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SOURCES } from "@/lib/sources";
 
 import { mostCovered } from "@/lib/cluster";
 import { inTopic } from "@/lib/load";
@@ -58,7 +59,7 @@ export function AboutPanel() {
         How this works
       </h2>
       <p>
-        Hashwire reads 13 crypto news feeds every 15 minutes and sorts every story by the networks it mentions. When
+        Hashwire reads {SOURCES.length} crypto news feeds every 15 minutes and sorts every story by the networks it mentions. When
         several outlets report the same news, you see it once. Posts from a network&apos;s own team are marked{" "}
         <span className="official">Official</span>.
       </p>

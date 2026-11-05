@@ -2,7 +2,7 @@
 
 **Live: [hashwire.vercel.app](https://hashwire.vercel.app)**
 
-Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15 minutes: crypto newsrooms, the networks' own teams and exchange listings. It tags every story with the blockchains it's about. Pick Bitcoin, Ethereum, Solana or any of 22 networks to read only that network's news, next to its price and 24-hour change.
+Crypto and blockchain news, network by network. Hashwire reads 38 feeds every 15 minutes: crypto newsrooms, the networks' own teams, research and security teams, and exchanges. It tags every story with the blockchains it's about. Pick Bitcoin, Ethereum, Solana or any of 22 networks to read only that network's news, next to its price and 24-hour change.
 
 <p align="center">
   <img src="docs/screenshot.png" alt="Hashwire front page: a strip of networks with prices, the most covered story in an aubergine band, then the latest crypto news grouped by age" width="72%">
@@ -29,11 +29,13 @@ Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15
 
 ### Sources
 
-| Newsrooms | Network teams | Exchanges |
-|---|---|---|
-| CoinDesk, Cointelegraph, Decrypt, The Block, Bitcoin Magazine, CryptoSlate, The Defiant | Ethereum Foundation, Bitcoin Optech, Solana, Sui, Base | Kraken (listings and new features) |
+| Newsrooms | Network teams | Research, security and protocols | Exchanges |
+|---|---|---|---|
+| CoinDesk, Cointelegraph, Decrypt, The Block, Bitcoin Magazine, CryptoSlate, The Defiant, DL News, Unchained, Protos, Bitcoinist, NewsBTC, CryptoPotato, U.Today, BeInCrypto, Cryptonews, CoinGape, Cryptopolitan, The Daily Hodl, Crypto Briefing | Ethereum Foundation, Bitcoin Optech, Bitcoin Core, Solana, Sui, Base, Arbitrum | Ethereum Research, Ethereum Magicians, Delving Bitcoin, Vitalik Buterin, a16z crypto, Chainalysis, Glassnode, OpenZeppelin, SlowMist | Kraken (listings and new features), Bitfinex |
 
-Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each story's headline, a short excerpt when the feed provides one, and a link to the original article. It never copies full articles. Nothing on the site is investment advice.
+Market news sites lose their price predictions, "AI predicts…" pieces and live blogs, and sites that also cover stocks, fraud or AI keep only their crypto stories (both filters are in `src/lib/sources.ts`, with unit tests). Every feed was tested from Vercel before it was added. Many network teams (Polygon, Cardano, NEAR, Avalanche, Chainlink, TON, Ripple and others) don't publish a working feed, and Coinbase blocks Vercel; their news still reaches their network pages through the newsrooms. Sites that republish other outlets' stories word for word are left out, so a story's source count stays honest.
+
+Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each story's headline, a short excerpt when the feed provides one, and a link to the original article. Its reader view shows only the text a publisher puts in its own feed; it never copies articles from publishers' websites. Nothing on the site is investment advice.
 
 ## Tech stack
 
@@ -52,7 +54,7 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 ## How it works
 
 ```
-13 RSS/Atom feeds ──▶ fetch + parse ──▶ clean + filter ──▶ networks + topics ──▶ group ──▶ pages, RSS, sitemap
+38 RSS/Atom feeds ──▶ fetch + parse ──▶ clean + filter ──▶ networks + topics ──▶ group ──▶ pages, RSS, sitemap
 CoinGecko prices ──▶ fetch + validate ───────────────────────────────────────────────────▶ strip, tables, network pages
 ```
 
@@ -88,7 +90,7 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 ## SEO
 
 - A unique title, description, canonical URL and social image on every page. Network and topic pages get their own generated images.
-- 22 network pages, 8 topic pages and 13 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
+- 22 network pages, 8 topic pages and 38 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
 - `sitemap.xml` lists every page with the time of its newest story; `robots.txt` points to it. Search results are `noindex, follow`.
 - Structured data: `WebSite` with a search action and an `ItemList` on the home page; `CollectionPage`, `ItemList` and a three-level `BreadcrumbList` (Hashwire, Networks, network) on section pages.
 - RSS `<link rel="alternate">` on every page, a web app manifest and icons. Unknown networks, topics and sources return a real `404`.
@@ -171,7 +173,7 @@ src/
   lib/
     networks.ts               The 22 networks and how stories are matched to them
     prices.ts                 CoinGecko request, validation and number formatting
-    sources.ts                The 13 feeds and their filters
+    sources.ts                The 38 feeds and their filters
     feeds.ts                  Fetching and caching (server only)
     parse.ts                  RSS and Atom parsing
     reader.ts                 Reader view: cleaning feed HTML, reading time

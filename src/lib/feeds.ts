@@ -125,6 +125,26 @@ export async function readPrices(): Promise<Prices> {
 
 const cachedPrices = unstable_cache(readPrices, ["prices", "v1"], { revalidate: PRICE_SECONDS, tags: ["prices"] });
 
+/**
+ * Runs `task` over `items` with at most `limit` running at once, keeping the order. Reading dozens
+ * of feeds at the same time makes large ones time out: parsing the others holds up their downloads.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await task(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+/** How many feeds are downloaded at once. */
+const CONCURRENT_FEEDS = 8;
+
 /** Every source's latest stories and every network's price, and the time they count as "now". */
 export async function readAllFeeds(): Promise<{ now: number; sample: boolean; feeds: FeedResult[]; prices: Prices }> {
   if (usingSampleData()) {
@@ -138,7 +158,7 @@ export async function readAllFeeds(): Promise<{ now: number; sample: boolean; fe
     return { now: SAMPLE_NOW, sample: true, feeds, prices: { ok: true, fetchedAt: SAMPLE_NOW, byNetwork } };
   }
   const [feeds, prices] = await Promise.all([
-    Promise.all(SOURCES.map((source) => cachedFeed(source.slug))),
+    mapLimit(SOURCES, CONCURRENT_FEEDS, (source) => cachedFeed(source.slug)),
     cachedPrices(),
   ]);
   return { now: Date.now(), sample: false, feeds, prices };

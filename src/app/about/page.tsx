@@ -32,12 +32,15 @@ export default function AboutPage() {
         <h2>Where the news comes from</h2>
         <p>
           Hashwire reads the public RSS feeds of {SOURCES.length} <Link href="/sources">sources</Link> every 15 minutes:
-          newsrooms such as CoinDesk, The Block and Cointelegraph, the networks&apos; own teams such as the Ethereum
-          Foundation, Bitcoin Optech and Solana, and Kraken&apos;s listing announcements.
+          newsrooms such as CoinDesk, The Block, DL News and Unchained, the networks&apos; own teams such as the Ethereum
+          Foundation, Bitcoin Core and Solana, research and security teams such as Chainalysis, Glassnode and the Ethereum
+          research forums, and exchanges such as Kraken.
         </p>
         <p>
           For each story you see the headline, a short excerpt when the feed provides one, the source and the time. The
-          headline links to the original article. Hashwire never copies full articles.
+          headline links to the original article. When a publisher&apos;s own feed carries the whole post, you can also read
+          it here in the reader view, always with a link to the original. Hashwire never copies articles from
+          publishers&apos; websites.
         </p>
 
         <h2>Networks</h2>

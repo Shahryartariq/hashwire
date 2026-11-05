@@ -9,7 +9,7 @@ import { agoLong } from "@/lib/time";
 import type { SourceKind } from "@/lib/types";
 
 const description =
-  "The 13 crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams and exchange listings, with the latest status of each feed.";
+  `The ${SOURCES.length} crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams, research and security teams, and exchanges, with the latest status of each feed.`;
 
 export const metadata: Metadata = {
   title: "Sources",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   ...pageMeta("/sources", "Hashwire sources", description),
 };
 
-const KINDS: SourceKind[] = ["press", "network", "exchange"];
+const KINDS: SourceKind[] = ["press", "network", "research", "exchange"];
 
 export default async function SourcesPage() {
   const wire = await getWire();
