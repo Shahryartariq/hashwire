@@ -1,5 +1,6 @@
 import { OG_SIZE, ogImage } from "@/lib/og";
 import { TOPICS, topicBySlug } from "@/lib/topics";
+import { SOURCES } from "@/lib/sources";
 
 export const alt = "Hashwire topic page";
 export const size = OG_SIZE;
@@ -11,5 +12,5 @@ export function generateStaticParams() {
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const topic = topicBySlug((await params).slug);
-  return ogImage(topic ? topic.name : "Crypto news", "Crypto news from 13 sources, by network");
+  return ogImage(topic ? topic.name : "Crypto news", `Crypto news from ${SOURCES.length} sources, by network`);
 }

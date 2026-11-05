@@ -8,7 +8,9 @@ import { SAMPLE_NOW, samplePriceResponse, sampleItems } from "./sample";
 import { PRODUCTION_URL } from "./site";
 import { SOURCES, sourceBySlug } from "./sources";
 import { toStories } from "./stories";
-import type { FeedResult, Prices } from "./types";
+import { cleanArticle, readingMinutes, type ReaderText } from "./reader";
+import { safeUrl, urlKey } from "./text";
+import type { FeedResult, Prices, RawItem } from "./types";
 
 /** How often each feed is read again, in seconds. */
 export const REFRESH_SECONDS = 15 * 60;
@@ -31,28 +33,65 @@ function reason(error: unknown): string {
   return "Could not be read";
 }
 
+/** Downloads one feed's XML. Throws on network errors, HTTP errors and oversized feeds. */
+async function fetchFeed(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: {
+      "user-agent": USER_AGENT,
+      accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.1",
+    },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (Number(response.headers.get("content-length") ?? 0) > MAX_BYTES) throw new FeedError("Feed is too large");
+  const xml = await response.text();
+  if (xml.length > MAX_BYTES) throw new FeedError("Feed is too large");
+  return xml;
+}
+
 /** Reads and cleans one feed. Never throws: a failure is reported in the result. */
 export async function readFeed(slug: string): Promise<FeedResult> {
   const source = sourceBySlug(slug);
   const fetchedAt = Date.now();
   if (!source) return { slug, ok: false, fetchedAt, stories: [], error: "Unknown source" };
   try {
-    const response = await fetch(source.feed, {
-      headers: {
-        "user-agent": USER_AGENT,
-        accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.1",
-      },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    if (Number(response.headers.get("content-length") ?? 0) > MAX_BYTES) throw new FeedError("Feed is too large");
-    const xml = await response.text();
-    if (xml.length > MAX_BYTES) throw new FeedError("Feed is too large");
+    const xml = await fetchFeed(source.feed);
     return { slug, ok: true, fetchedAt, stories: toStories(source, parseFeed(xml), fetchedAt) };
   } catch (error) {
     console.error(`[feeds] ${slug}: ${reason(error)}`);
     return { slug, ok: false, fetchedAt, stories: [], error: reason(error) };
+  }
+}
+
+/**
+ * The text of one story for the reader view, from its source's feed. Null when the story is no
+ * longer in the feed or the feed carries only a summary. Throws when the feed can't be read, so a
+ * failure is never cached.
+ */
+async function readArticle(slug: string, url: string): Promise<ReaderText | null> {
+  const source = sourceBySlug(slug);
+  if (!source) return null;
+  const items: RawItem[] = usingSampleData() ? sampleItems(slug) : parseFeed(await fetchFeed(source.feed));
+  const key = urlKey(url);
+  const item = items.find((i) => {
+    const link = safeUrl(i.link, source.homepage);
+    return link !== null && urlKey(link) === key;
+  });
+  if (!item?.body || !readingMinutes(item.body, url)) return null;
+  return cleanArticle(item.body, url);
+}
+
+/** Articles are cached for an hour: a post's text rarely changes, and each one is a feed download. */
+const cachedArticle = unstable_cache(readArticle, ["article", "v1"], { revalidate: 3600, tags: ["articles"] });
+
+/** A story's text for the reader view, or null when there's nothing to show. Never throws. */
+export async function getArticle(slug: string, url: string): Promise<ReaderText | null> {
+  try {
+    return await (usingSampleData() ? readArticle(slug, url) : cachedArticle(slug, url));
+  } catch (error) {
+    console.error(`[reader] ${slug}: ${reason(error)}`);
+    return null;
   }
 }
 
@@ -86,6 +125,26 @@ export async function readPrices(): Promise<Prices> {
 
 const cachedPrices = unstable_cache(readPrices, ["prices", "v1"], { revalidate: PRICE_SECONDS, tags: ["prices"] });
 
+/**
+ * Runs `task` over `items` with at most `limit` running at once, keeping the order. Reading dozens
+ * of feeds at the same time makes large ones time out: parsing the others holds up their downloads.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await task(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+/** How many feeds are downloaded at once. */
+const CONCURRENT_FEEDS = 8;
+
 /** Every source's latest stories and every network's price, and the time they count as "now". */
 export async function readAllFeeds(): Promise<{ now: number; sample: boolean; feeds: FeedResult[]; prices: Prices }> {
   if (usingSampleData()) {
@@ -99,7 +158,7 @@ export async function readAllFeeds(): Promise<{ now: number; sample: boolean; fe
     return { now: SAMPLE_NOW, sample: true, feeds, prices: { ok: true, fetchedAt: SAMPLE_NOW, byNetwork } };
   }
   const [feeds, prices] = await Promise.all([
-    Promise.all(SOURCES.map((source) => cachedFeed(source.slug))),
+    mapLimit(SOURCES, CONCURRENT_FEEDS, (source) => cachedFeed(source.slug)),
     cachedPrices(),
   ]);
   return { now: Date.now(), sample: false, feeds, prices };

@@ -2,6 +2,16 @@ import type { ItemText, Source, SourceKind } from "./types";
 
 const hasCategory = (item: ItemText, pattern: RegExp) => item.categories.some((c) => pattern.test(c));
 
+/** Price predictions, "AI predicts…" pieces, technical analysis and live blogs: filler on some market sites. */
+const PREDICTION =
+  /\bprice (prediction|analysis|outlook|forecast)s?\b|\b(ai|chatgpt|gemini|grok|copilot|claude) predicts?\b|\bpredicts?\b.*\b(price|rally|move|crash)\b|\bcan [A-Z]{2,6} (hit|reach|break)\b|^live\b|\bwhat'?s next\??$/i;
+const noPredictions = (item: ItemText) => !PREDICTION.test(item.title);
+
+/** For sites that also cover stocks, fraud, AI or general tech: crypto stories only. */
+const CRYPTO =
+  /\b(crypto\w*|bitcoin|btc|ethereum|ether|eth|blockchain|tokeni[sz]\w*|stablecoins?|defi|nfts?|web3|on-?chain|altcoins?|memecoins?|\w+coin|wallets?|solana|xrp|ripple|binance|coinbase|tether|usdc|dao|staking)\b/i;
+const aboutCrypto = (item: ItemText) => CRYPTO.test(item.title) || CRYPTO.test(item.text.slice(0, 400));
+
 /** Every feed Hashwire reads. Networks' own blogs come first: when two sources link the same URL, the first one keeps it. */
 export const SOURCES: Source[] = [
   {
@@ -48,6 +58,24 @@ export const SOURCES: Source[] = [
     kind: "network",
     network: "base",
     about: "The Base blog: builder programs and stories from apps running on Coinbase's layer 2.",
+  },
+  {
+    slug: "bitcoin-core",
+    name: "Bitcoin Core",
+    homepage: "https://bitcoincore.org/",
+    feed: "https://bitcoincore.org/en/rss.xml",
+    kind: "network",
+    network: "bitcoin",
+    about: "Releases and security advisories from Bitcoin Core, the reference software that most of the Bitcoin network runs.",
+  },
+  {
+    slug: "arbitrum",
+    name: "Arbitrum",
+    homepage: "https://blog.arbitrum.io/",
+    feed: "https://blog.arbitrum.io/rss/",
+    kind: "network",
+    network: "arbitrum",
+    about: "News and grant programs from the Arbitrum layer 2.",
   },
   {
     slug: "kraken",
@@ -117,6 +145,205 @@ export const SOURCES: Source[] = [
     kind: "press",
     about: "News on DeFi, stablecoins, tokenization and the regulation around them.",
   },
+  {
+    slug: "dl-news",
+    name: "DL News",
+    homepage: "https://www.dlnews.com/",
+    feed: "https://www.dlnews.com/arc/outboundfeeds/rss/",
+    kind: "press",
+    about: "Investigative reporting on DeFi, crypto markets and regulation.",
+  },
+  {
+    slug: "unchained",
+    name: "Unchained",
+    homepage: "https://unchainedcrypto.com/",
+    feed: "https://unchainedcrypto.com/feed/",
+    kind: "press",
+    about: "Laura Shin's crypto newsroom: markets, policy and the people behind them.",
+  },
+  {
+    slug: "protos",
+    name: "Protos",
+    homepage: "https://protos.com/",
+    feed: "https://protos.com/feed/",
+    kind: "press",
+    about: "Critical crypto reporting: scandals, hacks and the industry's biggest players.",
+  },
+  {
+    slug: "bitcoinist",
+    name: "Bitcoinist",
+    homepage: "https://bitcoinist.com/",
+    feed: "https://bitcoinist.com/feed/",
+    kind: "press",
+    about: "Bitcoin and crypto market news. Price predictions and analysis are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "newsbtc",
+    name: "NewsBTC",
+    homepage: "https://www.newsbtc.com/",
+    feed: "https://www.newsbtc.com/feed/",
+    kind: "press",
+    about: "Crypto market and industry news. Price predictions and analysis are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "cryptopotato",
+    name: "CryptoPotato",
+    homepage: "https://cryptopotato.com/",
+    feed: "https://cryptopotato.com/feed/",
+    kind: "press",
+    about: "Crypto market news, liquidations and exchange stories. Price predictions are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "u-today",
+    name: "U.Today",
+    homepage: "https://u.today/",
+    feed: "https://u.today/rss",
+    kind: "press",
+    about: "Fast crypto news, with a lot of XRP and Ripple coverage. Price predictions are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "beincrypto",
+    name: "BeInCrypto",
+    homepage: "https://beincrypto.com/",
+    feed: "https://beincrypto.com/feed/",
+    kind: "press",
+    about: "Crypto news and market coverage. Price predictions are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "cryptonews",
+    name: "Cryptonews",
+    homepage: "https://cryptonews.com/",
+    feed: "https://cryptonews.com/news/feed/",
+    kind: "press",
+    about: "Crypto news and live market coverage. Price predictions and live blogs are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "coingape",
+    name: "CoinGape",
+    homepage: "https://coingape.com/",
+    feed: "https://coingape.com/feed/",
+    kind: "press",
+    about: "Crypto market and policy news. Price predictions are left out.",
+    include: noPredictions,
+  },
+  {
+    slug: "cryptopolitan",
+    name: "Cryptopolitan",
+    homepage: "https://www.cryptopolitan.com/",
+    feed: "https://www.cryptopolitan.com/feed/",
+    kind: "press",
+    about: "Crypto, fintech and markets news. Only the crypto stories are kept, and price predictions are left out.",
+    include: (item) => aboutCrypto(item) && noPredictions(item),
+  },
+  {
+    slug: "daily-hodl",
+    name: "The Daily Hodl",
+    homepage: "https://dailyhodl.com/",
+    feed: "https://dailyhodl.com/feed/",
+    kind: "press",
+    about: "Crypto, markets and fraud news. Only the crypto stories are kept, and price predictions are left out.",
+    include: (item) => aboutCrypto(item) && noPredictions(item),
+  },
+  {
+    slug: "crypto-briefing",
+    name: "Crypto Briefing",
+    homepage: "https://cryptobriefing.com/",
+    feed: "https://cryptobriefing.com/feed/",
+    kind: "press",
+    about: "Crypto and markets news. Only the crypto stories are kept, and price predictions are left out.",
+    include: (item) => aboutCrypto(item) && noPredictions(item),
+  },
+  {
+    slug: "ethresearch",
+    name: "Ethereum Research",
+    homepage: "https://ethresear.ch/",
+    feed: "https://ethresear.ch/latest.rss",
+    kind: "research",
+    network: "ethereum",
+    about: "New topics on ethresear.ch, the forum where Ethereum's protocol researchers publish ideas.",
+  },
+  {
+    slug: "ethereum-magicians",
+    name: "Ethereum Magicians",
+    homepage: "https://ethereum-magicians.org/",
+    feed: "https://ethereum-magicians.org/latest.rss",
+    kind: "research",
+    network: "ethereum",
+    about: "New discussions on Ethereum Magicians, where EIPs and network upgrades are debated.",
+  },
+  {
+    slug: "delving-bitcoin",
+    name: "Delving Bitcoin",
+    homepage: "https://delvingbitcoin.org/",
+    feed: "https://delvingbitcoin.org/latest.rss",
+    kind: "research",
+    network: "bitcoin",
+    about: "New topics on Delving Bitcoin, the forum for Bitcoin protocol development.",
+  },
+  {
+    slug: "vitalik",
+    name: "Vitalik Buterin",
+    homepage: "https://vitalik.eth.limo/",
+    feed: "https://vitalik.eth.limo/feed.xml",
+    kind: "research",
+    network: "ethereum",
+    about: "Essays from Ethereum's co-founder on protocol design, cryptography and society.",
+  },
+  {
+    slug: "a16z-crypto",
+    name: "a16z crypto",
+    homepage: "https://a16zcrypto.com/",
+    feed: "https://a16zcrypto.com/feed/",
+    kind: "research",
+    about: "Research and essays from Andreessen Horowitz's crypto team.",
+  },
+  {
+    slug: "chainalysis",
+    name: "Chainalysis",
+    homepage: "https://www.chainalysis.com/blog/",
+    feed: "https://www.chainalysis.com/feed/",
+    kind: "research",
+    about: "Blockchain analytics: crypto crime research, hacks traced onchain and adoption reports.",
+  },
+  {
+    slug: "glassnode",
+    name: "Glassnode Insights",
+    homepage: "https://insights.glassnode.com/",
+    feed: "https://insights.glassnode.com/rss/",
+    kind: "research",
+    about: "Onchain market analysis of Bitcoin and Ethereum from Glassnode.",
+  },
+  {
+    slug: "openzeppelin",
+    name: "OpenZeppelin",
+    homepage: "https://blog.openzeppelin.com/",
+    feed: "https://blog.openzeppelin.com/rss.xml",
+    kind: "research",
+    about: "Smart contract security: audits, standards and tooling.",
+  },
+  {
+    slug: "slowmist",
+    name: "SlowMist",
+    homepage: "https://slowmist.medium.com/",
+    feed: "https://slowmist.medium.com/feed",
+    kind: "research",
+    about: "Security research and analyses of hacks from the SlowMist team.",
+  },
+  {
+    slug: "bitfinex",
+    name: "Bitfinex",
+    homepage: "https://blog.bitfinex.com/",
+    feed: "https://blog.bitfinex.com/feed/",
+    kind: "exchange",
+    about: "Market analysis and product news from the Bitfinex exchange. App changelogs are left out.",
+    include: (item) => !/change ?log/i.test(item.title),
+  },
 ];
 
 const BY_SLUG = new Map(SOURCES.map((source) => [source.slug, source]));
@@ -132,5 +359,6 @@ export function sourceName(slug: string): string {
 export const KIND_LABEL: Record<SourceKind, string> = {
   network: "Network teams",
   press: "Newsrooms",
+  research: "Research, security and protocols",
   exchange: "Exchanges",
 };

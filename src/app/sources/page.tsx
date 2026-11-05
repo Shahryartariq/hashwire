@@ -9,7 +9,7 @@ import { agoLong } from "@/lib/time";
 import type { SourceKind } from "@/lib/types";
 
 const description =
-  "The 13 crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams and exchange listings, with the latest status of each feed.";
+  `The ${SOURCES.length} crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams, research and security teams, and exchanges, with the latest status of each feed.`;
 
 export const metadata: Metadata = {
   title: "Sources",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   ...pageMeta("/sources", "Hashwire sources", description),
 };
 
-const KINDS: SourceKind[] = ["press", "network", "exchange"];
+const KINDS: SourceKind[] = ["press", "network", "research", "exchange"];
 
 export default async function SourcesPage() {
   const wire = await getWire();
@@ -43,6 +43,7 @@ export default async function SourcesPage() {
               {SOURCES.filter((s) => s.kind === kind).map((source) => {
                 const feed = wire.feeds.find((f) => f.slug === source.slug);
                 const count = feed?.stories.length ?? 0;
+                const readable = feed?.stories.filter((story) => story.read).length ?? 0;
                 return (
                   <li key={source.slug}>
                     <h3>
@@ -54,6 +55,7 @@ export default async function SourcesPage() {
                         <span className="ok">
                           {count === 1 ? "1 story" : `${count} stories`} in the last three weeks, checked{" "}
                           {agoLong(feed.fetchedAt, wire.now)}
+                          {count > 0 && (readable > 0 ? `. ${readable} with the full post, readable here.` : ". Summaries only.")}
                         </span>
                       ) : (
                         <span className="warn">Didn&apos;t load on the last check ({feed?.error ?? "unknown error"})</span>

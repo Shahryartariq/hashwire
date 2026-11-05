@@ -3,7 +3,7 @@ export const SITE_NAME = "Hashwire";
 export const TAGLINE = "Crypto and blockchain news, network by network.";
 
 export const SITE_DESCRIPTION =
-  "Crypto news by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with prices, from CoinDesk, The Block, Cointelegraph and the networks' own teams. Updated every 15 minutes.";
+  "Crypto news by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with prices, from CoinDesk, The Block, the networks' own teams and dozens more sources. Updated every 15 minutes.";
 
 export const AUTHOR = { name: "Muhammad Shehryar", url: "https://github.com/Shahryartariq" };
 export const SOURCE_URL = "https://github.com/Shahryartariq/hashwire";

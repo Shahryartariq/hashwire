@@ -290,10 +290,48 @@ describe("time", () => {
 
 
 describe("sources", () => {
+  const item = (title: string, text = "") => ({ title, text, categories: [], url: "https://example.com/a" });
+
+  it.each([
+    "Bitcoin Price Prediction: Can BTC Reach $100K?",
+    "Cardano Price Analysis for November 4: Market Is Bleeding",
+    "Copilot AI Predicts an Explosive Q4 Move for NEAR Protocol",
+    "Sam Altman's ChatGPT AI Predicts a Huge Bitcoin Crash",
+    "LIVE – Bitcoin Price Slides as Washington Shifts",
+    "XLM Stuck Below $0.18 Resistance, What's Next?",
+    "Zcash Surges 10% Ahead of Upgrade: Can ZEC Hit $1,500?",
+  ])("leaves out price predictions on market sites: %s", (title) => {
+    expect(sourceBySlug("cryptonews")!.include!(item(title))).toBe(false);
+  });
+
+  it.each([
+    "Bitcoin Bounces Back From 6-Week Low Despite $1B ETF Exodus",
+    "SEC Updates Crypto-Asset FAQs as Firms Seek Clarity",
+    "Polymarket Hits 100% Odds on Democratic Sweep",
+  ])("keeps real news on market sites: %s", (title) => {
+    expect(sourceBySlug("cryptonews")!.include!(item(title))).toBe(true);
+  });
+
+  it("keeps only crypto stories from sites that also cover stocks, fraud or AI", () => {
+    const include = sourceBySlug("daily-hodl")!.include!;
+    expect(include(item("$2.85 billion in crypto from Binance hack frozen"))).toBe(true);
+    expect(include(item("Stablecoin issuer Circle reports Q3 revenue"))).toBe(true);
+    expect(include(item("Ivy League university breach exposes 851,000 accounts"))).toBe(false);
+    expect(include(item("Walmart driver's tip exposes alleged fraud ring", "Packages shipped from Arizona to Vietnam."))).toBe(false);
+    // AI stories about "tokens" aren't crypto.
+    expect(sourceBySlug("crypto-briefing")!.include!(item("New model cuts cost per million tokens in half"))).toBe(false);
+  });
+
+  it("leaves out exchange changelogs", () => {
+    const include = sourceBySlug("bitfinex")!.include!;
+    expect(include(item("Change Log: Version 1.140"))).toBe(false);
+    expect(include(item("Bitcoin's Next Test Comes After the Fed Decision"))).toBe(true);
+  });
+
   it("has unique slugs, https feeds and a description for each", () => {
     expect(new Set(SOURCES.map((s) => s.slug)).size).toBe(SOURCES.length);
     for (const source of SOURCES) {
-      expect(source.slug).toMatch(/^[a-z]+(-[a-z]+)*$/);
+      expect(source.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
       expect(source.feed.startsWith("https://")).toBe(true);
       expect(source.about.length).toBeGreaterThan(30);
       if (source.network) expect(networkBySlug(source.network), source.slug).toBeDefined();

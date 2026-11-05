@@ -1,6 +1,6 @@
 {
   "capturedAt": "2026-11-04T12:05:00Z",
-  "note": "A snapshot of each source's feed, used when NEWS_SAMPLE_DATA=1 (local development and end-to-end tests). Each item is [title, link, date, summary, categories].",
+  "note": "A snapshot of each source's feed, used when NEWS_SAMPLE_DATA=1 (local development and end-to-end tests). Each item is [title, link, date, summary, categories]. Sources added on 2026-11-05 have one real headline each from their feeds; for BeInCrypto, Bitcoinist and Crypto Briefing whose feeds only held newer items, the date was moved inside the snapshot window.",
   "sources": {
     "coindesk": [
       ["Bitcoin rebounds from midterm dip as DeFi leads gains", "https://www.coindesk.com/markets/2026/11/04/bitcoin-rebounds-from-midterm-dip-as-defi-leads-gains", "Wed, 04 Nov 2026 10:38:58 +0000", "Bitcoin recovered from a dip to around $75,600 as Democrats won Congress, while DeFi tokens led gains and Trump-linked coins fell.", ["Markets", "Crypto Markets Today", "News"]],
@@ -97,6 +97,81 @@
       ["EURCV is available for trading!", "https://blog.kraken.com/product/asset-listings/eurcv-is-available-for-trading", "Tue, 03 Nov 2026 14:43:59 +0000", "We’re thrilled to announce that EURCV is available for trading on Kraken! Funding and trading EURCV is live as of Nov. 3, 2026.", ["Asset Listings", "Kraken", "trading"]],
       ["Our VIP summer, from the Williams garage to a table for four", "https://blog.kraken.com/kraken-vip/summer-2026", "Thu, 29 Oct 2026 18:45:59 +0000", "A summer of events, from a day inside the Williams factory to a Michelin-starred chef in Prague, plus the launch of our new in-app VIP portal.", ["Kraken VIP"]],
       ["USDG deposits and withdrawals now available on Arbitrum One!", "https://blog.kraken.com/product/new-features/usdg-deposits-and-withdrawals-now-available-on-arbitrum-one", "Thu, 29 Oct 2026 10:26:14 +0000", "Global Dollar (USDG) is now supported on Arbitrum, a fast, low-cost Ethereum layer-2 network. Native issuance, no bridge required.", ["New Features", "Kraken", "trading"]]
+    ],
+    "bitcoin-core": [
+      ["CVE-2026-117349 - Slow unbounded memory growth on paused pre-BIP31 peers", "https://bitcoincore.org/en/2026/10/28/disclose-fpausesend-oom/", "2026-10-28T04:00:00.000Z", "Bitcoin Core queues announcements for all peers, including paused ones. Pre-BIP31 peers could stay paused forever and let the queue grow unboundedly. A fix for…", []]
+    ],
+    "arbitrum": [
+      ["Introducing the Arbitrum Stablecoin Growth Program", "https://blog.arbitrum.io/stablecoin-growth-program/", "2026-10-15T13:43:20.000Z", "The Arbitrum Stablecoin Growth Program is now open to protocols with at least $1M in stablecoin balances. Eligible protocols that commit to building…", []]
+    ],
+    "dl-news": [
+      ["Strategy’s MSCI risk: What to watch before November 11", "https://www.dlnews.com/articles/markets/strategy-msci-index-exclusion-risk/", "2026-10-28T22:30:00.000Z", "MSCI will name affected companies on November 11. Here’s what investors should watch as Strategy faces possible index exclusion.", []]
+    ],
+    "unchained": [
+      ["Korea’s Democrats Back a Crypto Tax Delay, Promise a Firm End Date They Haven’t Named", "https://unchainedcrypto.com/koreas-democrats-back-a-crypto-tax-delay-promise-a-firm-end-date-they-havent-named/", "2026-11-04T10:30:55.000Z", "Party leader Kim Min-seok wants the Digital Asset Basic Act passed before crypto gains are taxed and pledged a firm end date for the deferral this…", []]
+    ],
+    "protos": [
+      ["Crypto survived cybersecurity awareness month… just", "https://protos.com/crypto-survived-cybersecurity-awareness-month-just/", "2026-11-03T19:14:32.000Z", "October saw what seemed like a constant stream of incidents, including over 50 crypto hacks plus serious cybersecurity breaches elsewhere.", []]
+    ],
+    "bitcoinist": [
+      ["Crypto Regulation Outlook Shifts After Democrats Win Congress", "https://bitcoinist.com/crypto-regulation-outlook-shifts-after-democrats-win-congress/", "2026-11-02T12:05:00.000Z", "The 2026 U.S. midterm elections have reshaped the outlook for crypto regulation, with Democrats winning control of both chambers of Congress.", []]
+    ],
+    "newsbtc": [
+      ["SEC Updates Crypto-Asset FAQs as Firms Seek Clarity on Federal Securities Rules", "https://www.newsbtc.com/news/sec-updates-crypto-asset-faqs-as-firms-seek-clarity-on-federal-securities-rules/", "2026-11-04T07:00:00.000Z", "The SEC Division of Corporation Finance added questions 1.4, 1.5 and 1.6 to its crypto-assets FAQ on November 2, 2026.", []]
+    ],
+    "cryptopotato": [
+      ["Bitcoin Whipsaws After Democratic Sweep: BTC Reclaims $78K", "https://cryptopotato.com/bitcoin-whipsaws-after-democratic-sweep-btc-reclaims-78k/", "2026-11-04T08:28:30.000Z", "One analyst believes the latest drop may have marked another local bottom near a key on-chain support level.", []]
+    ],
+    "u-today": [
+      ["627% XRP Burn Rate Surge Drives Bullish Expectations", "https://u.today/627-xrp-burn-rate-surge-drives-bullish-expectations", "2026-11-04T11:39:00.000Z", "XRP's daily burn activity sees a rapid daily increase as activity on the XRP ledger begins to surge, providing a bullish outlook for the asset.", []]
+    ],
+    "beincrypto": [
+      ["Wirex to Host New Stablecoin Infrastructure Conference, Full Stack London", "https://beincrypto.com/wirex-host-stablecoin-infrastructure-conference-full-stack-london/", "2026-11-02T12:05:00.000Z", "Wirex, the global stablecoin infrastructure provider, will host Full Stack London, a new stablecoin infrastructure conference, on Thursday, Nov. 12…", []]
+    ],
+    "cryptonews": [
+      ["Bitcoin Bounces Back From 6-Week Low Despite $1B ETF Exodus", "https://cryptonews.com/news/bitcoin-bounces-back-six-week-low-etf-outflows/", "2026-11-04T11:54:48.000Z", "Bitcoin rebounds from a six-week low above $78,000 as Bitcoin ETF outflows exceed $1.15 billion, with institutional selling slowing.", []]
+    ],
+    "coingape": [
+      ["Polymarket Hits 100% Odds on Democratic Sweep as Trump Faces Crushing Midterm Defeat", "https://coingape.com/polymarket-hits-100-odds-on-democratic-sweep-as-trump-faces-crushing-midterm-defeat/", "2026-11-04T11:17:34.000Z", "On-chain prediction market Polymarket reached 100% implied probability of a Democratic sweep of both the House and Senate on November 3, 2026,…", []]
+    ],
+    "cryptopolitan": [
+      ["North Korean fake job interviews stole $14.3M before the Binance heist", "https://www.cryptopolitan.com/chainalysis-14-3m-thefts-binance-trap/", "2026-11-04T10:20:08.000Z", "Chainalysis tied more than $14.3 million in earlier crypto losses to the North Korean fake job interview playbook that later hit Binance.", []]
+    ],
+    "daily-hodl": [
+      ["$2,850,000,000 in Crypto Involved in Binance Hack Frozen or Intercepted, Says CEO Richard Teng", "https://dailyhodl.com/2026/11/04/2850000000-in-crypto-involved-in-binance-hack-frozen-or-intercepted-says-ceo-richard-teng/", "2026-11-04T08:04:35.000Z", "The co-CEO of the largest crypto exchange in the world says billions of dollars in crypto are now safeguarded by authorities and private firms following the $6.34 billion Binance hack.", []]
+    ],
+    "crypto-briefing": [
+      ["Securitize talks scaling tokenization at Chainlink’s Link:NYC", "https://cryptobriefing.com/securitize-scaling-tokenization-chainlink-link-nyc/", "2026-11-02T12:05:00.000Z", "The focus on liquidity, distribution, and interoperability highlights the challenges and potential growth in the tokenization industry.", []]
+    ],
+    "ethresearch": [
+      ["It's time to scale the trust: EIP-8288 on OP Stack", "https://ethresear.ch/t/its-time-to-scale-the-trust-eip-8288-on-op-stack/26208", "2026-11-02T02:05:03.000Z", "Rollups scaled by moving execution off the L1, but the authentication part of every transaction still goes to the L1. That makes data the…", []]
+    ],
+    "ethereum-magicians": [
+      ["ERC-721 Composition Extension", "https://ethereum-magicians.org/t/erc-721-composition-extension/30181", "2026-11-02T10:32:48.000Z", "An ERC-721 extension for tokens that hold assets in a container of their own: nothing leaves the container while the token exists, and any contract…", []]
+    ],
+    "delving-bitcoin": [
+      ["Machine-checked soundness of BIP340 batch verification with 128-bit derived randomizers", "https://delvingbitcoin.org/t/machine-checked-soundness-of-bip340-batch-verification-with-128-bit-derived-randomizers/3019", "2026-11-02T08:53:43.000Z", "sipa/bips#219 and #222 propose shrinking BIP340’s batch-verification randomizers from 256 to 128 bits, which speeds up batch verification in…", []]
+    ],
+    "vitalik": [
+      ["Digital minimalism", "https://vitalik.ca/general/2026/10/31/digital_minimalism.html", "2026-10-31T00:00:00.000Z", "", []]
+    ],
+    "a16z-crypto": [
+      ["The rise of generative networks", "https://a16zfrontier.com/posts/article/rise-generative-networks/", "2026-10-28T15:46:53.000Z", "On a generative network, every output also becomes an input for someone else.", []]
+    ],
+    "chainalysis": [
+      ["The $6.4 Billion Binance Hack: Tracing the North Korea Link", "https://www.chainalysis.com/blog/binance-exploit-latest-findings-and-response/", "2026-10-30T09:34:29.000Z", "Around 4:20 p.m. ET on October 29, 2026, funds began leaving Binance hot wallets across multiple blockchains.", []]
+    ],
+    "glassnode": [
+      ["Strategy Watch #9", "https://research.glassnode.com/strategy-watch-09-2026/", "2026-10-30T14:44:12.000Z", "Our monthly analysis of strategy performance and capital flows in digital assets. We examine fund returns, structured product trends, and allocator…", []]
+    ],
+    "openzeppelin": [
+      ["OpenZeppelin Brings Confidential Balances and Transfers to Stellar", "https://www.openzeppelin.com/news/openzeppelin-brings-confidential-balances-and-transfers-to-stellar", "2026-10-22T17:46:00.000Z", "OpenZeppelin is delivering the next major addition to its contracts library for Stellar: Confidential Token contracts.", []]
+    ],
+    "slowmist": [
+      ["One Fish, Multiple Meals — Analysis of the $780K zkLink Exploit", "https://slowmist.medium.com/one-fish-multiple-meals-analysis-of-the-780k-zklink-exploit-e07d06d4dbd5", "2026-10-31T12:30:11.000Z", "On October 29, 2026, the cross-chain protocol zkLink was attacked, resulting in losses of approximately $783,000.", []]
+    ],
+    "bitfinex": [
+      ["Strategy, Strive and the Daily Dividend Race", "https://blog.bitfinex.com/industry-news/strategy-strive-and-the-daily-dividend-race/", "2026-10-30T11:28:52.000Z", "Strategy Inc. shareholders voted on 28 October to let the company pay dividends on its Stretch (STRC) preferred stock every calendar day, a change…", []]
     ]
   }
 }

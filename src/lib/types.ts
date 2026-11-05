@@ -1,5 +1,5 @@
-/** Who publishes a feed: a network's own team, a newsroom, or an exchange. */
-export type SourceKind = "network" | "press" | "exchange";
+/** Who publishes a feed: a network's own team, a newsroom, a research, security or protocol team, or an exchange. */
+export type SourceKind = "network" | "press" | "research" | "exchange";
 
 export type TopicSlug =
   | "markets"
@@ -19,6 +19,8 @@ export interface RawItem {
   date: number | null;
   /** Description, summary or content. May contain HTML. */
   summary: string;
+  /** The fullest text in the item (content:encoded, Atom content, or the description), as HTML. */
+  body?: string;
   categories: string[];
   /** A discussion page, when the feed has one. */
   comments?: string;
@@ -79,6 +81,8 @@ export interface Story {
   /** Networks the story is about. */
   networks: string[];
   discussion?: string;
+  /** Minutes to read, when the feed carries enough of the post to read here (the reader view). */
+  read?: number;
 }
 
 /** One news event: the main story and any other coverage of it. */

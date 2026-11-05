@@ -2,7 +2,7 @@
 
 **Live: [hashwire.vercel.app](https://hashwire.vercel.app)**
 
-Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15 minutes: crypto newsrooms, the networks' own teams and exchange listings. It tags every story with the blockchains it's about. Pick Bitcoin, Ethereum, Solana or any of 22 networks to read only that network's news, next to its price and 24-hour change.
+Crypto and blockchain news, network by network. Hashwire reads 38 feeds every 15 minutes: crypto newsrooms, the networks' own teams, research and security teams, and exchanges. It tags every story with the blockchains it's about. Pick Bitcoin, Ethereum, Solana or any of 22 networks to read only that network's news, next to its price and 24-hour change.
 
 <p align="center">
   <img src="docs/screenshot.png" alt="Hashwire front page: a strip of networks with prices, the most covered story in an aubergine band, then the latest crypto news grouped by age" width="72%">
@@ -24,15 +24,18 @@ Crypto and blockchain news, network by network. Hashwire reads 13 feeds every 15
 - **Official posts are marked**, so a network's own announcement is never confused with reporting about it.
 - **Eight topics:** markets, ETFs and institutions, regulation, DeFi, stablecoins, hacks and security, exchanges, development.
 - **Biggest 24-hour moves**, the most covered stories of the week, search, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
+- **Reader view:** when a feed carries the whole post, the story gets a "Read here · 4 min" link. It opens the text alone on a quiet page: no menus, prices, sidebar or footer, a serif reading font, a reading-progress bar, and text size, typeface and theme settings that are remembered. The text comes only from the publisher's own feed (never scraped from their website), images and embeds stay on the original, every page links to it, and reader pages are kept out of search engines. The [sources page](https://hashwire.vercel.app/sources) shows which feeds carry full posts.
 - **Light, dark or system theme:** switch in the header. Your choice is saved in your browser and applied before the page paints, so a dark page never flashes white. Without a choice, the site follows your system setting.
 
 ### Sources
 
-| Newsrooms | Network teams | Exchanges |
-|---|---|---|
-| CoinDesk, Cointelegraph, Decrypt, The Block, Bitcoin Magazine, CryptoSlate, The Defiant | Ethereum Foundation, Bitcoin Optech, Solana, Sui, Base | Kraken (listings and new features) |
+| Newsrooms | Network teams | Research, security and protocols | Exchanges |
+|---|---|---|---|
+| CoinDesk, Cointelegraph, Decrypt, The Block, Bitcoin Magazine, CryptoSlate, The Defiant, DL News, Unchained, Protos, Bitcoinist, NewsBTC, CryptoPotato, U.Today, BeInCrypto, Cryptonews, CoinGape, Cryptopolitan, The Daily Hodl, Crypto Briefing | Ethereum Foundation, Bitcoin Optech, Bitcoin Core, Solana, Sui, Base, Arbitrum | Ethereum Research, Ethereum Magicians, Delving Bitcoin, Vitalik Buterin, a16z crypto, Chainalysis, Glassnode, OpenZeppelin, SlowMist | Kraken (listings and new features), Bitfinex |
 
-Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each story's headline, a short excerpt when the feed provides one, and a link to the original article. It never copies full articles. Nothing on the site is investment advice.
+Market news sites lose their price predictions, "AI predicts…" pieces and live blogs, and sites that also cover stocks, fraud or AI keep only their crypto stories (both filters are in `src/lib/sources.ts`, with unit tests). Every feed was tested from Vercel before it was added. Many network teams (Polygon, Cardano, NEAR, Avalanche, Chainlink, TON, Ripple and others) don't publish a working feed, and Coinbase blocks Vercel; their news still reaches their network pages through the newsrooms. Sites that republish other outlets' stories word for word are left out, so a story's source count stays honest.
+
+Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each story's headline, a short excerpt when the feed provides one, and a link to the original article. Its reader view shows only the text a publisher puts in its own feed; it never copies articles from publishers' websites. Nothing on the site is investment advice.
 
 ## Tech stack
 
@@ -44,14 +47,14 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 | Feeds | RSS 2.0, RSS 1.0 and Atom parsed with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser); text cleaned with [entities](https://github.com/fb55/entities) |
 | Prices | CoinGecko `/simple/price`, one request for every network |
 | Caching | `unstable_cache`: each feed for 15 minutes, prices for 10 minutes |
-| Tests | Vitest (83 unit and API tests), Playwright (64 end-to-end runs on desktop and mobile), axe-core accessibility checks |
+| Tests | Vitest (93 unit and API tests), Playwright (86 end-to-end runs on desktop and mobile), axe-core accessibility checks |
 | CI | GitHub Actions: lint, type check, unit tests, build, end-to-end tests |
 | Hosting | Vercel |
 
 ## How it works
 
 ```
-13 RSS/Atom feeds ──▶ fetch + parse ──▶ clean + filter ──▶ networks + topics ──▶ group ──▶ pages, RSS, sitemap
+38 RSS/Atom feeds ──▶ fetch + parse ──▶ clean + filter ──▶ networks + topics ──▶ group ──▶ pages, RSS, sitemap
 CoinGecko prices ──▶ fetch + validate ───────────────────────────────────────────────────▶ strip, tables, network pages
 ```
 
@@ -87,7 +90,7 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 ## SEO
 
 - A unique title, description, canonical URL and social image on every page. Network and topic pages get their own generated images.
-- 22 network pages, 8 topic pages and 13 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
+- 22 network pages, 8 topic pages and 38 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
 - `sitemap.xml` lists every page with the time of its newest story; `robots.txt` points to it. Search results are `noindex, follow`.
 - Structured data: `WebSite` with a search action and an `ItemList` on the home page; `CollectionPage`, `ItemList` and a three-level `BreadcrumbList` (Hashwire, Networks, network) on section pages.
 - RSS `<link rel="alternate">` on every page, a web app manifest and icons. Unknown networks, topics and sources return a real `404`.
@@ -97,6 +100,7 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 
 - A strict Content Security Policy with a fresh nonce on every request (`src/proxy.ts`), plus `X-Frame-Options`, `Referrer-Policy`, HSTS and a `Permissions-Policy` that switches everything off. Network colours are drawn as SVG fills so that no inline styles are needed.
 - No secrets required. The optional CoinGecko key stays on the server.
+- Feed HTML shown in the reader view is cleaned with [sanitize-html](https://github.com/apostrophecms/sanitize-html) to an allowlist of text elements: no scripts, styles, event handlers, forms, iframes or images; links are made absolute, limited to http(s) and mailto, and marked `nofollow`.
 - Google Analytics is opt-in through `GA_MEASUREMENT_ID` and loads under the same nonce-based policy.
 - Landmarks, a skip link, visible focus, one `h1` per page, readable contrast in both themes, and price changes spoken in words ("up 1.7% in 24 hours"). The networks table has a caption and row headers and can be scrolled with the keyboard. End-to-end tests run axe-core on every page type and fail on any serious WCAG 2.1 AA issue.
 
@@ -160,22 +164,27 @@ src/
     networks/                 All networks with prices
     network/[slug]/           One network: price, official posts, its news (+ social image)
     topic/[slug]/, source/[slug]/, sources/, about/, search/
+    read/[id]/                Reader view (noindex)
     feed.xml/route.ts         Hashwire's own RSS feed
     sitemap.ts, robots.ts, manifest.ts, opengraph-image.tsx, apple-icon.tsx, icon.svg
     layout.tsx, not-found.tsx, error.tsx, globals.css
-  components/                 Frame, network strip, table, chips, prices, lead, story list, side panels
+  components/                 Frame, network strip, table, chips, prices, lead, story list, side panels,
+                              theme switch, reader settings
   lib/
     networks.ts               The 22 networks and how stories are matched to them
     prices.ts                 CoinGecko request, validation and number formatting
-    sources.ts                The 13 feeds and their filters
+    sources.ts                The 38 feeds and their filters
     feeds.ts                  Fetching and caching (server only)
     parse.ts                  RSS and Atom parsing
+    reader.ts                 Reader view: cleaning feed HTML, reading time
+    theme.ts                  Theme and reader settings, and the script that applies them before paint
     stories.ts, text.ts       Cleaning, filtering, safe URLs
     topics.ts                 Topic rules and page copy
     cluster.ts                Grouping reports of the same news
     load.ts                   One wire per request, filters, search
     time.ts, site.ts, csp.ts, analytics.ts, og.tsx
-    fixtures/                 Saved feed and price snapshots for development and tests
+    fixtures/                 Saved feed and price snapshots for development and tests, and
+                              placeholder full text for two sample stories (reader view tests)
   proxy.ts                    Content Security Policy with nonces; 404 for unknown sections
 e2e/                          Playwright tests
 ```
@@ -184,7 +193,7 @@ Hashwire is the sister site of [Tensorwire](https://github.com/Shahryartariq/ten
 
 ## Credits
 
-Headlines and excerpts belong to their publishers and link to the original articles. Prices by CoinGecko. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).
+Headlines, excerpts and the post text shown in the reader view belong to their publishers, come from their public feeds, and link to the original articles. Prices by CoinGecko. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).
 
 ## License
 
