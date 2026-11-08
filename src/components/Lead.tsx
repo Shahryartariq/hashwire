@@ -6,14 +6,13 @@ import type { Cluster } from "@/lib/types";
 
 import { Coverage } from "./Coverage";
 import { NetworkChip } from "./Networks";
-import { ReaderLink } from "./StoryList";
+import { StoryActions } from "./StoryList";
 
 /** The story most outlets are reporting right now, set large in the masthead band. */
 export function Lead({ cluster, now }: { cluster: Cluster; now: number }) {
   const { lead } = cluster;
   const widely = cluster.sources.length > 1;
   const official = sourceBySlug(lead.source)?.kind === "network";
-  const readable = cluster.stories.find((story) => story.read);
   return (
     <article className="lead" aria-labelledby="lead-title">
       <p className="lead-why">
@@ -24,11 +23,11 @@ export function Lead({ cluster, now }: { cluster: Cluster; now: number }) {
         <a href={lead.url}>{lead.title}</a>
       </h2>
       {lead.summary && <p className="lead-summary">{lead.summary}</p>}
+      <StoryActions cluster={cluster} />
       <p className="lead-meta">
         <Link href={`/source/${lead.source}`}>{sourceName(lead.source)}</Link>
         {official && <span className="official">Official</span>}
         <span>{agoLong(lead.publishedAt, now)}</span>
-        {readable && <ReaderLink story={readable} showSource={readable !== lead} />}
         {cluster.networks.map((slug) => (
           <NetworkChip key={slug} slug={slug} />
         ))}
