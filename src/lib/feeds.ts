@@ -102,6 +102,42 @@ export async function getArticle(slug: string, url: string): Promise<ReaderText 
 const cachedFeed = unstable_cache(readFeed, ["feed", "v1"], { revalidate: REFRESH_SECONDS, tags: ["feeds"] });
 
 /**
+ * The last copy of a feed that loaded. It refreshes from `cachedFeed` (so it never downloads
+ * anything itself) and throws when the latest attempt failed: a fresh entry is then not stored,
+ * and a stale one is kept, because Next.js keeps the old value when a background refresh throws.
+ */
+const lastGoodFeed = unstable_cache(
+  async (slug: string): Promise<FeedResult> => {
+    const attempt = await cachedFeed(slug);
+    if (!attempt.ok) throw new FeedError(attempt.error ?? "Could not be read");
+    return attempt;
+  },
+  ["feed-good", "v1"],
+  { revalidate: REFRESH_SECONDS, tags: ["feeds"] },
+);
+
+/**
+ * A feed's latest attempt; when that failed, the last good copy with `ok: false` and the error,
+ * so a source that blocks or times out for an hour keeps its stories instead of vanishing.
+ */
+export async function feedWithFallback(slug: string): Promise<FeedResult> {
+  const attempt = await cachedFeed(slug);
+  let good: FeedResult | null = null;
+  try {
+    good = await lastGoodFeed(slug);
+  } catch {
+    // No good copy yet.
+  }
+  return keepLastGood(attempt, good);
+}
+
+/** The latest attempt if it worked, else the last good copy marked as stale. Pure, for tests. */
+export function keepLastGood(attempt: FeedResult, good: FeedResult | null): FeedResult {
+  if (attempt.ok || !good || good.stories.length === 0) return attempt;
+  return { ...good, ok: false, stale: true, error: attempt.error, checkedAt: attempt.fetchedAt };
+}
+
+/**
  * Prices for every network in one CoinGecko request. A free Demo key (COINGECKO_API_KEY)
  * raises the rate limit but isn't required. Never throws: without prices, pages show none.
  */
@@ -158,7 +194,7 @@ export async function readAllFeeds(): Promise<{ now: number; sample: boolean; fe
     return { now: SAMPLE_NOW, sample: true, feeds, prices: { ok: true, fetchedAt: SAMPLE_NOW, byNetwork } };
   }
   const [feeds, prices] = await Promise.all([
-    mapLimit(SOURCES, CONCURRENT_FEEDS, (source) => cachedFeed(source.slug)),
+    mapLimit(SOURCES, CONCURRENT_FEEDS, (source) => feedWithFallback(source.slug)),
     cachedPrices(),
   ]);
   return { now: Date.now(), sample: false, feeds, prices };

@@ -3,13 +3,12 @@ import Link from "next/link";
 
 import { Frame } from "@/components/Frame";
 import { getWire } from "@/lib/load";
-import { pageMeta } from "@/lib/site";
+import { breadcrumbLd, jsonLd, pageMeta } from "@/lib/site";
 import { KIND_LABEL, SOURCES } from "@/lib/sources";
 import { agoLong } from "@/lib/time";
-import type { SourceKind } from "@/lib/types";
+import type { FeedResult, SourceKind } from "@/lib/types";
 
-const description =
-  `The ${SOURCES.length} crypto news sources Hashwire reads every 15 minutes: newsrooms, the networks' own teams, research and security teams, and exchanges, with the latest status of each feed.`;
+const description = `The ${SOURCES.length} crypto news feeds Hashwire reads every 15 minutes, from newsrooms, network teams, researchers and exchanges, and whether each one is working.`;
 
 export const metadata: Metadata = {
   title: "Sources",
@@ -23,15 +22,12 @@ export default async function SourcesPage() {
   const wire = await getWire();
   return (
     <Frame sample={wire.sample}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbLd([{ name: "Sources", path: "/sources" }])) }} />
       <div className="band band-short">
         <div className="band-inner">
           <h1>Sources</h1>
           <div className="band-intro">
-            <p>
-              Hashwire reads these feeds every 15 minutes. It shows each story&apos;s headline, a short excerpt where the
-              feed provides one, and a link to the original. Some feeds also cover other subjects; for those, only the crypto
-              posts are kept.
-            </p>
+            <p>The {SOURCES.length} feeds Hashwire reads, checked every 15 minutes. &ldquo;Full text&rdquo; means you can read their posts here.</p>
           </div>
         </div>
       </div>
@@ -51,17 +47,9 @@ export default async function SourcesPage() {
                     </h3>
                     <p>{source.about}</p>
                     <p className="source-status">
-                      {feed?.ok ? (
-                        <span className="ok">
-                          {count === 1 ? "1 story" : `${count} stories`} in the last three weeks, checked{" "}
-                          {agoLong(feed.fetchedAt, wire.now)}
-                          {count > 0 && (readable > 0 ? `. ${readable} with the full post, readable here.` : ". Summaries only.")}
-                        </span>
-                      ) : (
-                        <span className="warn">Didn&apos;t load on the last check ({feed?.error ?? "unknown error"})</span>
-                      )}
+                      <FeedStatus feed={feed} now={wire.now} readable={readable} count={count} />
                       <a href={source.homepage} rel="noopener">
-                        Website
+                        Website<span className="visually-hidden"> of {source.name}</span>
                       </a>
                     </p>
                   </li>
@@ -72,5 +60,24 @@ export default async function SourcesPage() {
         ))}
       </div>
     </Frame>
+  );
+}
+
+/** "30 stories · checked 12 minutes ago · full text", or what went wrong. */
+function FeedStatus({ feed, now, count, readable }: { feed?: FeedResult; now: number; count: number; readable: number }) {
+  if (!feed) return <span>Not checked yet</span>;
+  if (feed.stale) {
+    return (
+      <span className="warn">
+        Not responding ({feed.error}). Showing {count === 1 ? "1 story" : `${count} stories`} from {agoLong(feed.fetchedAt, now)}
+      </span>
+    );
+  }
+  if (!feed.ok) return <span className="warn">Not responding ({feed.error ?? "unknown error"})</span>;
+  return (
+    <span>
+      {count === 1 ? "1 story" : `${count} stories`} · checked {agoLong(feed.fetchedAt, now)}
+      {readable > 0 && " · full text"}
+    </span>
   );
 }

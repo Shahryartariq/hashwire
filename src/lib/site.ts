@@ -3,7 +3,7 @@ export const SITE_NAME = "Hashwire";
 export const TAGLINE = "Crypto and blockchain news, network by network.";
 
 export const SITE_DESCRIPTION =
-  "Crypto news by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with prices, from CoinDesk, The Block, the networks' own teams and dozens more sources. Updated every 15 minutes.";
+  "Crypto news sorted by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with live prices. From CoinDesk, The Block and more, updated every 15 minutes.";
 
 export const AUTHOR = { name: "Muhammad Shehryar", url: "https://github.com/Shahryartariq" };
 export const SOURCE_URL = "https://github.com/Shahryartariq/hashwire";
@@ -51,4 +51,14 @@ export function pageMeta(path: string, title: string, description: string, image
 /** JSON for a <script type="application/ld+json">, safe against "</script>" in the data. */
 export function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+/** A BreadcrumbList for a page under the home page: Hashwire › … › this page. */
+export function breadcrumbLd(trail: { name: string; path: string }[]) {
+  const crumbs = [{ name: SITE_NAME, path: "/" }, ...trail];
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: absolute(c.path) })),
+  };
 }

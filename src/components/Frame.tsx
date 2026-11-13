@@ -23,7 +23,7 @@ export function Frame({
   const sections = [
     { href: "/", key: "home", label: "All news" },
     { href: "/networks", key: "networks", label: "Networks" },
-    ...TOPICS.map((t) => ({ href: `/topic/${t.slug}`, key: t.slug, label: t.name })),
+    ...TOPICS.map((t) => ({ href: `/topic/${t.slug}`, key: t.slug, label: t.short ?? t.name })),
   ];
   return (
     <div className="frame">
@@ -68,14 +68,11 @@ export function Frame({
             <Mark /> Hashwire
           </p>
           <p>
-            Headlines and short excerpts link to the original articles. Every story belongs to its publisher.
-          </p>
-          <p>
-            Prices by{" "}
+            Every headline links to the publisher&apos;s article. Prices by{" "}
             <a href="https://www.coingecko.com/" rel="noopener">
               CoinGecko
             </a>
-            , refreshed every 10 minutes. Nothing on Hashwire is investment advice.
+            . Nothing here is investment advice.
           </p>
           <ul className="footer-links">
             <li>

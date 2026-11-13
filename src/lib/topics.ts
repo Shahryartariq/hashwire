@@ -3,6 +3,8 @@ import type { TopicSlug } from "./types";
 export interface Topic {
   slug: TopicSlug;
   name: string;
+  /** Label in the section nav, where space is tight. */
+  short?: string;
   /** Page title for search engines. */
   title: string;
   description: string;
@@ -29,6 +31,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "institutions",
     name: "ETFs and institutions",
+    short: "ETFs",
     title: "Crypto ETF and institutional news",
     description: "Crypto ETFs, banks, asset managers, treasury companies and tokenized stocks and funds: how big money is moving into crypto.",
     intro:
@@ -69,6 +72,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "security",
     name: "Hacks and security",
+    short: "Security",
     title: "Crypto hacks, exploits and security news",
     description: "Crypto hacks and exploits, stolen funds and where they went, scams, North Korean attackers and security research.",
     intro:

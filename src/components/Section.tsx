@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { Frame } from "@/components/Frame";
 import { Movers } from "@/components/Networks";
 import { NewSince } from "@/components/NewSince";
-import { AboutPanel, MostCovered, TopicIndex } from "@/components/Rail";
+import { Pager } from "@/components/Pager";
+import { MostCovered } from "@/components/Rail";
 import { Outage } from "@/components/Status";
 import { StoryList } from "@/components/StoryList";
-import { SITE_NAME, absolute, jsonLd } from "@/lib/site";
+import { paginate } from "@/lib/paging";
+import { SITE_NAME, absolute, breadcrumbLd, jsonLd } from "@/lib/site";
 import type { Cluster, Wire } from "@/lib/types";
 
 /** A filtered view of the wire: a network, a topic or a source. */
@@ -22,6 +25,7 @@ export function Section({
   extra,
   parent,
   emptyText,
+  page = 1,
 }: {
   wire: Wire;
   clusters: Cluster[];
@@ -37,12 +41,12 @@ export function Section({
   /** A middle breadcrumb, such as Networks. */
   parent?: { name: string; path: string };
   emptyText: string;
+  /** Which page of the list, from `?page=`. */
+  page?: number;
 }) {
-  const crumbs = [
-    { name: SITE_NAME, path: "/" },
-    ...(parent ? [parent] : []),
-    { name, path },
-  ];
+  const paged = paginate(clusters, page);
+  if (!paged) notFound();
+  const crumbs = [...(parent ? [parent] : []), { name, path }];
   const structured = [
     {
       "@context": "https://schema.org",
@@ -57,11 +61,7 @@ export function Section({
           .map((c, i) => ({ "@type": "ListItem", position: i + 1, url: c.lead.url, name: c.lead.title })),
       },
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: absolute(c.path) })),
-    },
+    breadcrumbLd(crumbs),
   ];
 
   return (
@@ -88,7 +88,7 @@ export function Section({
           <p className="status">
             {clusters.length === 1 ? "1 story" : `${clusters.length} stories`} in the last three weeks.
           </p>
-          <NewSince newest={clusters[0]?.latest ?? 0} />
+          {paged.page === 1 && <NewSince newest={clusters[0]?.latest ?? 0} />}
         </div>
       </div>
       <div className="columns">
@@ -96,14 +96,15 @@ export function Section({
           {wire.stories.length === 0 ? (
             <Outage />
           ) : (
-            <StoryList clusters={clusters} now={wire.now} empty={<p>{emptyText}</p>} />
+            <>
+              <StoryList clusters={paged.items} now={wire.now} empty={<p>{emptyText}</p>} />
+              <Pager path={path} page={paged.page} pages={paged.pages} />
+            </>
           )}
         </div>
-        <aside className="column-side" aria-label="More ways in">
+        <aside className="column-side" aria-label="Most covered and price moves">
           <MostCovered clusters={clusters} now={wire.now} title={`Most covered: ${name}`} />
           <Movers prices={wire.prices} />
-          <TopicIndex clusters={wire.clusters} current={active} />
-          <AboutPanel />
         </aside>
       </div>
     </Frame>

@@ -74,3 +74,20 @@ describe("analytics and security policy", () => {
     expect(on).not.toContain("unsafe-inline");
   });
 });
+
+describe("search matches the start of words", () => {
+  const story = (title: string) =>
+    ({ stories: [{ title, summary: "" }] }) as unknown as Parameters<typeof search>[0][number];
+
+  it("finds a word by its beginning, not by text inside another word", () => {
+    const clusters = [story("Ethereum upgrade lands"), story("A new method for staking"), story("ETH falls 3%")];
+    expect(search(clusters, "eth").map((c) => c.stories[0].title)).toEqual(["Ethereum upgrade lands", "ETH falls 3%"]);
+    expect(search(clusters, "thod")).toEqual([]);
+  });
+
+  it("treats regular-expression characters in the query as text", () => {
+    const clusters = [story("C++ and (rust) wallets"), story("Plain wallets")];
+    expect(search(clusters, "c++").length).toBe(1);
+    expect(search(clusters, "(rust)").length).toBe(1);
+  });
+});

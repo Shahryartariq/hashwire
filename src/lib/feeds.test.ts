@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { readAllFeeds, readFeed, readPrices, usingSampleData } from "./feeds";
+import { keepLastGood, readAllFeeds, readFeed, readPrices, usingSampleData } from "./feeds";
+import type { FeedResult } from "./types";
 import { SOURCES } from "./sources";
 
 const RSS = `<?xml version="1.0"?><rss version="2.0"><channel><title>T</title>
@@ -95,5 +96,33 @@ describe("sample data", () => {
     expect(feeds).toHaveLength(SOURCES.length);
     expect(feeds.every((f) => f.ok && f.stories.length > 0)).toBe(true);
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("keepLastGood", () => {
+  const story = { id: "a", title: "Old but good" } as unknown as FeedResult["stories"][number];
+  const good: FeedResult = { slug: "solana", ok: true, fetchedAt: 1_000, stories: [story] };
+  const failed: FeedResult = { slug: "solana", ok: false, fetchedAt: 9_000, stories: [], error: "HTTP 429" };
+
+  it("uses the latest attempt when it worked", () => {
+    const fresh: FeedResult = { ...good, fetchedAt: 9_000 };
+    expect(keepLastGood(fresh, good)).toBe(fresh);
+  });
+
+  it("falls back to the last good copy, marked stale, when the latest attempt failed", () => {
+    expect(keepLastGood(failed, good)).toEqual({
+      slug: "solana",
+      ok: false,
+      stale: true,
+      fetchedAt: 1_000,
+      checkedAt: 9_000,
+      stories: [story],
+      error: "HTTP 429",
+    });
+  });
+
+  it("reports the failure when there's no good copy", () => {
+    expect(keepLastGood(failed, null)).toBe(failed);
+    expect(keepLastGood(failed, { ...good, stories: [] })).toBe(failed);
   });
 });

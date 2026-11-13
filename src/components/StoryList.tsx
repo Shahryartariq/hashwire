@@ -1,9 +1,7 @@
 import { sourceBySlug, sourceName } from "@/lib/sources";
 import { ago, agoLong, bucketize, formatDate } from "@/lib/time";
-import { topicBySlug } from "@/lib/topics";
 import type { Cluster, Story } from "@/lib/types";
 
-import { Coverage } from "./Coverage";
 import { NetworkChip } from "./Networks";
 
 /** "A", "A and B", "A, B and C" */
@@ -13,8 +11,9 @@ export function listNames(names: string[]): string {
 }
 
 /**
- * One story. Links inside rows are plain anchors rather than next/link: a page holds dozens of
- * rows, and each client-side link would add hydration and prefetch work for little gain.
+ * One story: headline, a short summary, then one line with the ways to read it and where else it ran.
+ * Links inside rows are plain anchors rather than next/link: a page holds dozens of rows, and each
+ * client-side link would add hydration and prefetch work for little gain.
  */
 export function StoryRow({ cluster, now }: { cluster: Cluster; now: number }) {
   const { lead } = cluster;
@@ -33,12 +32,8 @@ export function StoryRow({ cluster, now }: { cluster: Cluster; now: number }) {
           <a href={lead.url}>{lead.title}</a>
         </h3>
         {lead.summary && <p className="story-summary">{lead.summary}</p>}
-        <StoryActions cluster={cluster} />
-        <div className="story-meta">
-          <Coverage count={cluster.sources.length} />
-          <a href={`/source/${lead.source}`} className="story-source">
-            {sourceName(lead.source)}
-          </a>
+        <div className="story-foot">
+          <StoryActions cluster={cluster} />
           {source?.kind === "network" && <span className="official">Official</span>}
           {others.length > 0 && (
             <span className="also">
@@ -64,16 +59,6 @@ export function StoryRow({ cluster, now }: { cluster: Cluster; now: number }) {
               ))}
             </span>
           )}
-          {cluster.topics.length > 0 && (
-            <span className="tags">
-              <span className="visually-hidden">Topics: </span>
-              {cluster.topics.map((slug) => (
-                <a key={slug} href={`/topic/${slug}`} className="tag">
-                  {topicBySlug(slug)?.name}
-                </a>
-              ))}
-            </span>
-          )}
         </div>
       </div>
     </li>
@@ -88,13 +73,13 @@ export function StoryActions({ cluster }: { cluster: Cluster }) {
   const { lead } = cluster;
   const readable = cluster.stories.find((story) => story.read);
   return (
-    <div className="story-actions">
+    <span className="story-actions">
       {readable && <ReaderLink story={readable} showSource={readable !== lead} />}
       <a href={lead.url} className="original-link">
         Read on {sourceName(lead.source)}
         <span aria-hidden="true"> ↗</span>
       </a>
-    </div>
+    </span>
   );
 }
 
