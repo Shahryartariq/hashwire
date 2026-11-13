@@ -4,16 +4,16 @@ import { SOURCES } from "@/lib/sources";
 import { agoLong } from "@/lib/time";
 import type { Wire } from "@/lib/types";
 
-/** "18 sources, newest story 12 minutes ago." Mentions sources that failed to load. */
+/** "Newest story 12 minutes ago · 38 sources". Says so when some sources aren't responding. */
 export function Status({ wire }: { wire: Wire }) {
   const working = wire.feeds.filter((f) => f.ok).length;
   const newest = wire.stories[0]?.publishedAt;
   return (
     <p className="status">
+      {newest && <>Newest story {agoLong(newest, wire.now)} · </>}
       <Link href="/sources">
-        {working === SOURCES.length ? `${SOURCES.length} sources` : `${working} of ${SOURCES.length} sources`}
+        {working === SOURCES.length ? `${SOURCES.length} sources` : `${working} of ${SOURCES.length} sources responding`}
       </Link>
-      {newest ? `, newest story ${agoLong(newest, wire.now)}.` : "."}
     </p>
   );
 }
@@ -23,7 +23,7 @@ export function Outage() {
   return (
     <div className="notice">
       <h2>The feeds didn&apos;t load</h2>
-      <p>None of the news sources answered just now. This is usually brief; try again in a minute.</p>
+      <p>None of the news sources answered just now. Try again in a minute.</p>
     </div>
   );
 }

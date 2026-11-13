@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/search" },
 };
 
+/** Results shown at once; a longer list is better narrowed with another word. */
+const MAX_RESULTS = 50;
+
 function readQuery(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
   return (raw ?? "").trim().slice(0, 80);
@@ -23,6 +26,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const query = readQuery((await searchParams).q);
   const wire = await getWire();
   const results = query ? search(wire.clusters, query) : [];
+  const shown = results.slice(0, MAX_RESULTS);
   return (
     <Frame query={query} sample={wire.sample}>
       <div className="band band-short">
@@ -33,18 +37,20 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
               ? "Search headlines and summaries from the last three weeks."
               : results.length === 1
                 ? "1 story found."
-                : `${results.length} stories found.`}
+                : results.length > MAX_RESULTS
+                  ? `${results.length} stories found. Showing the newest ${MAX_RESULTS}; add a word to narrow it down.`
+                  : `${results.length} stories found.`}
           </p>
         </div>
       </div>
       <div className="page-body">
         <StoryList
-          clusters={results}
+          clusters={shown}
           now={wire.now}
           empty={
             query ? (
               <>
-                <p>Nothing matches every word of “{query}”. Try fewer or shorter words, or browse a topic:</p>
+                <p>Nothing matches every word of “{query}”. Try fewer words, or browse a topic:</p>
                 <ul className="inline-links">
                   {TOPICS.map((t) => (
                     <li key={t.slug}>
@@ -54,7 +60,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                 </ul>
               </>
             ) : (
-              <p>Type a coin, company or idea in the search box above, for example “ETF”, “Binance” or “staking”.</p>
+              <p>Try a coin, a company or a word like “ETF”, “Binance” or “staking”.</p>
             )
           }
         />

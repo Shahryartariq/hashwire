@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Change, Dot } from "@/components/Networks";
 import { Section } from "@/components/Section";
+import { pageHref, pagedRobots, pagedTitle, readPage } from "@/lib/paging";
 import { getWire, inNetwork } from "@/lib/load";
 import { networkBySlug } from "@/lib/networks";
 import { formatCap, formatUsd } from "@/lib/prices";
@@ -20,27 +21,32 @@ function copy(slug: string) {
   return { network, title, description };
 }
 
-export async function generateMetadata({ params }: PageProps<"/network/[slug]">): Promise<Metadata> {
-  const page = copy((await params).slug);
-  if (!page) return {};
-  const path = `/network/${page.network.slug}`;
+export async function generateMetadata({ params, searchParams }: PageProps<"/network/[slug]">): Promise<Metadata> {
+  const text = copy((await params).slug);
+  if (!text) return {};
+  const path = `/network/${text.network.slug}`;
+  const page = readPage((await searchParams).page) ?? 1;
   return {
-    title: page.title,
-    description: page.description,
-    ...pageMeta(path, page.title, page.description, `${path}/opengraph-image`),
+    title: pagedTitle(text.title, page),
+    description: text.description,
+    ...pageMeta(pageHref(path, page), text.title, text.description, `${path}/opengraph-image`),
+    ...pagedRobots(page),
   };
 }
 
-export default async function NetworkPage({ params }: PageProps<"/network/[slug]">) {
-  const page = copy((await params).slug);
-  if (!page) notFound();
-  const { network } = page;
+export default async function NetworkPage({ params, searchParams }: PageProps<"/network/[slug]">) {
+  const page = readPage((await searchParams).page);
+  if (page === null) notFound();
+  const text = copy((await params).slug);
+  if (!text) notFound();
+  const { network } = text;
   const wire = await getWire();
   const price = wire.prices.byNetwork[network.slug];
   const official = SOURCES.filter((s) => s.network === network.slug);
 
   return (
     <Section
+      page={page}
       wire={wire}
       clusters={wire.clusters.filter((c) => inNetwork(c, network.slug))}
       active="networks"
@@ -54,7 +60,7 @@ export default async function NetworkPage({ params }: PageProps<"/network/[slug]
           {network.symbol && <span className="symbol">{network.symbol}</span>}
         </span>
       }
-      title={page.title}
+      title={text.title}
       extra={
         price ? (
           <dl className="price-block">
@@ -77,7 +83,7 @@ export default async function NetworkPage({ params }: PageProps<"/network/[slug]
             <div className="price-source">
               <dt className="visually-hidden">Source</dt>
               <dd>
-                CoinGecko, {agoLong(price.updatedAt, wire.now)}. Not investment advice.
+                Price from CoinGecko, {agoLong(price.updatedAt, wire.now)}
               </dd>
             </div>
           </dl>
@@ -92,11 +98,17 @@ export default async function NetworkPage({ params }: PageProps<"/network/[slug]
             <a href={network.homepage} rel="noopener">
               {new URL(network.homepage).hostname.replace(/^www\./, "")}
             </a>
-            {official.map((source) => (
-              <a key={source.slug} href={`/source/${source.slug}`}>
-                Official posts: {source.name}
-              </a>
-            ))}
+            {official.length > 0 && (
+              <span>
+                From the team:{" "}
+                {official.map((source, i) => (
+                  <span key={source.slug}>
+                    {i > 0 && (i === official.length - 1 ? " and " : ", ")}
+                    <a href={`/source/${source.slug}`}>{source.name}</a>
+                  </span>
+                ))}
+              </span>
+            )}
           </p>
         </>
       }

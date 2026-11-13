@@ -12,7 +12,7 @@ Crypto and blockchain news, network by network. Hashwire reads 38 feeds every 15
 
 | Lighthouse | Performance | Accessibility | Best practices | SEO |
 |---|---|---|---|---|
-| Mobile | 94–97 on network pages, 78–94 on the home page (it varies between runs) | 100 | 100 | 100 |
+| Mobile | 95–99 (local production build; it varies between runs) | 100 | 100 | 100 |
 | Desktop | 100 | 100 | 100 | 100 |
 
 ## Features
@@ -23,7 +23,8 @@ Crypto and blockchain news, network by network. Hashwire reads 38 feeds every 15
 - **One story, all its coverage.** Reports of the same news are grouped automatically. A network team's own post leads when there is one, and the other coverage is listed under it.
 - **Official posts are marked**, so a network's own announcement is never confused with reporting about it.
 - **Eight topics:** markets, ETFs and institutions, regulation, DeFi, stablecoins, hacks and security, exchanges, development.
-- **Biggest 24-hour moves**, the most covered stories of the week, search, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
+- **Two ways to read every story:** "Read on CoinDesk ↗" opens the original, and "Read here · 2 min" opens the reader view when the feed carries the full post. Each story is a headline, a two-line summary and one line of links, with room to breathe.
+- **Biggest 24-hour moves**, the most covered stories of the week, search (whole words, newest 50 results), 30 stories a page with older pages behind them, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
 - **Reader view:** when a feed carries the whole post, the story gets a "Read here · 4 min" link. It opens the text alone on a quiet page: no menus, prices, sidebar or footer, a serif reading font, a reading-progress bar, and text size, typeface and theme settings that are remembered. The text comes only from the publisher's own feed (never scraped from their website), images and embeds stay on the original, every page links to it, and reader pages are kept out of search engines. The [sources page](https://hashwire.vercel.app/sources) shows which feeds carry full posts.
 - **Light, dark or system theme:** switch in the header. Your choice is saved in your browser and applied before the page paints, so a dark page never flashes white. Without a choice, the site follows your system setting.
 
@@ -58,7 +59,7 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 CoinGecko prices ──▶ fetch + validate ───────────────────────────────────────────────────▶ strip, tables, network pages
 ```
 
-- **Each feed and the prices are fetched and cached separately** (`src/lib/feeds.ts`). A slow or broken feed times out after 10 seconds, shows up on the sources page, and never holds up the rest. If CoinGecko is down, the news still works and the prices are simply left out.
+- **Each feed and the prices are fetched and cached separately** (`src/lib/feeds.ts`). A slow or broken feed times out after 10 seconds and never holds up the rest. When a feed that worked before starts failing (a 403, a rate limit, a timeout), its last good copy stays up and the sources page says how old it is. If CoinGecko is down, the news still works and the prices are simply left out.
 - **Everything after the fetch is pure functions with unit tests**: parsing (`parse.ts`), cleaning and filtering (`stories.ts`), network tagging (`networks.ts`), prices (`prices.ts`), topics (`topics.ts`) and grouping (`cluster.ts`).
 - **Feed text and API data are untrusted.** HTML becomes plain text rendered by React. Links must be `http(s)`, tracking parameters are removed, and responses over 5 MB are refused. Price fields that aren't positive finite numbers are dropped.
 - **Feeds get cleaned up per source.** Bitcoin Magazine repeats its name and headline at the start of every summary; CryptoSlate ends each one with "Read the full story on CryptoSlate". Both are stripped. Decrypt's AI stories, The Block's explainers, Cointelegraph's daily round-up and Kraken's event posts are left out.
@@ -91,8 +92,8 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 
 - A unique title, description, canonical URL and social image on every page. Network and topic pages get their own generated images.
 - 22 network pages, 8 topic pages and 38 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
-- `sitemap.xml` lists every page with the time of its newest story; `robots.txt` points to it. Search results are `noindex, follow`.
-- Structured data: `WebSite` with a search action and an `ItemList` on the home page; `CollectionPage`, `ItemList` and a three-level `BreadcrumbList` (Hashwire, Networks, network) on section pages.
+- `sitemap.xml` lists every page with the time of its newest story; `robots.txt` points to it. Search results and page 2 onward of any list are `noindex, follow`, with their own canonical URL.
+- Structured data: `WebSite` with a search action and an `ItemList` on the home page; `CollectionPage`, `ItemList` and a `BreadcrumbList` (Hashwire, Networks, network) on section pages; `BreadcrumbList` on the sources and about pages.
 - RSS `<link rel="alternate">` on every page, a web app manifest and icons. Unknown networks, topics and sources return a real `404`.
 - Google Search Console verification through `GOOGLE_SITE_VERIFICATION`.
 
