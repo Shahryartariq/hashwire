@@ -27,7 +27,7 @@ export function paginate<T>(items: readonly T[], page: number, size = PAGE_SIZE)
 
 /** The address of page `page` of `path`: page 1 has no parameter. */
 export function pageHref(path: string, page: number): string {
-  return page <= 1 ? path : `${path}?page=${page}`;
+  return page <= 1 ? path : `${path}${path.includes("?") ? "&" : "?"}page=${page}`;
 }
 
 /**

@@ -24,7 +24,8 @@ Crypto and blockchain news, network by network. Hashwire reads 38 feeds every 15
 - **Official posts are marked**, so a network's own announcement is never confused with reporting about it.
 - **Eight topics:** markets, ETFs and institutions, regulation, DeFi, stablecoins, hacks and security, exchanges, development.
 - **Two ways to read every story:** "Read on CoinDesk ↗" opens the original, and "Read here · 2 min" opens the reader view when the feed carries the full post. Each story is a headline, a two-line summary and one line of links, with room to breathe.
-- **Biggest 24-hour moves**, the most covered stories of the week, search (whole words, newest 50 results), 30 stories a page with older pages behind them, a "new since your last visit" marker, its own [RSS feed](https://hashwire.vercel.app/feed.xml), and it works without JavaScript.
+- **Biggest 24-hour moves**, the most covered stories of the week, search (whole words, paged, with a shortcut to the network, topic or source you named), 30 stories a page with older pages behind them, a "new since your last visit" marker, an [RSS feed](https://hashwire.vercel.app/feed.xml) for everything and one for each network (`/network/bitcoin/feed.xml`), and it works without JavaScript.
+- **Forgiving addresses:** `/network/btc`, `/network/Bitcoin` and `/topic/DeFi` go to the right page; `/network`, `/feed` and other guessed paths redirect instead of showing a 404.
 - **Reader view:** when a feed carries the whole post, the story gets a "Read here · 4 min" link. It opens the text alone on a quiet page: no menus, prices, sidebar or footer, a serif reading font, a reading-progress bar, and text size, typeface and theme settings that are remembered. The text comes only from the publisher's own feed (never scraped from their website), images and embeds stay on the original, every page links to it, and reader pages are kept out of search engines. The [sources page](https://hashwire.vercel.app/sources) shows which feeds carry full posts.
 - **Light, dark or system theme:** switch in the header. Your choice is saved in your browser and applied before the page paints, so a dark page never flashes white. Without a choice, the site follows your system setting.
 
@@ -44,12 +45,12 @@ Prices come from [CoinGecko](https://www.coingecko.com/). Hashwire shows each st
 |---|---|
 | Framework | [Next.js 16](https://nextjs.org) (App Router, Server Components, Route Handlers, Proxy) |
 | Language | TypeScript (strict) |
-| UI | React 19, hand-written CSS, Archivo variable font (weight and width axes) self-hosted from npm |
+| UI | React 19, hand-written CSS, Archivo variable font self-hosted and trimmed to the weights and widths in use (57 KB) |
 | Feeds | RSS 2.0, RSS 1.0 and Atom parsed with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser); text cleaned with [entities](https://github.com/fb55/entities) |
 | Prices | CoinGecko `/simple/price`, one request for every network |
 | Caching | `unstable_cache`: each feed for 15 minutes, prices for 10 minutes |
 | Tests | Vitest (93 unit and API tests), Playwright (86 end-to-end runs on desktop and mobile), axe-core accessibility checks |
-| CI | GitHub Actions: lint, type check, unit tests, build, end-to-end tests |
+| CI | GitHub Actions: dependency audit, lint, type check, unit tests, build, end-to-end tests; CodeQL security analysis; Dependabot monthly updates |
 | Hosting | Vercel |
 
 ## How it works
@@ -94,13 +95,15 @@ Crypto newsrooms use the same vocabulary all day, so the bar is high. "SEC divis
 - 22 network pages, 8 topic pages and 38 source pages are indexable landing pages ("Solana (SOL) news and price today"), each with its own introduction.
 - `sitemap.xml` lists every page with the time of its newest story; `robots.txt` points to it. Search results and page 2 onward of any list are `noindex, follow`, with their own canonical URL.
 - Structured data: `WebSite` with a search action and an `ItemList` on the home page; `CollectionPage`, `ItemList` and a `BreadcrumbList` (Hashwire, Networks, network) on section pages; `BreadcrumbList` on the sources and about pages.
-- RSS `<link rel="alternate">` on every page, a web app manifest and icons. Unknown networks, topics and sources return a real `404`.
+- RSS `<link rel="alternate">` on every page (network pages list their own feed first), a web app manifest and icons. Unknown networks, topics and sources return a real `404`; `?page=1` redirects to the address without it, so each page has one URL.
 - Google Search Console verification through `GOOGLE_SITE_VERIFICATION`.
 
 ## Security and accessibility
 
 - A strict Content Security Policy with a fresh nonce on every request (`src/proxy.ts`), plus `X-Frame-Options`, `Referrer-Policy`, HSTS and a `Permissions-Policy` that switches everything off. Network colours are drawn as SVG fills so that no inline styles are needed.
 - No secrets required. The optional CoinGecko key stays on the server.
+- Feed downloads time out after 10 seconds and are read in pieces with a 5 MB cap, so a feed that sends no `Content-Length` can't hold an unbounded download in memory. A feed that worked before and starts failing keeps its last good copy.
+- [`/.well-known/security.txt`](https://hashwire.vercel.app/.well-known/security.txt) and [SECURITY.md](SECURITY.md) say how to report a problem privately. CI fails on high or critical advisories in production dependencies, and CodeQL scans every pull request.
 - Feed HTML shown in the reader view is cleaned with [sanitize-html](https://github.com/apostrophecms/sanitize-html) to an allowlist of text elements: no scripts, styles, event handlers, forms, iframes or images; links are made absolute, limited to http(s) and mailto, and marked `nofollow`.
 - Google Analytics is opt-in through `GA_MEASUREMENT_ID` and loads under the same nonce-based policy.
 - Landmarks, a skip link, visible focus, one `h1` per page, readable contrast in both themes, and price changes spoken in words ("up 1.7% in 24 hours"). The networks table has a caption and row headers and can be scrolled with the keyboard. End-to-end tests run axe-core on every page type and fail on any serious WCAG 2.1 AA issue.

@@ -29,7 +29,10 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/net
   return {
     title: pagedTitle(text.title, page),
     description: text.description,
-    ...pageMeta(pageHref(path, page), text.title, text.description, `${path}/opengraph-image`),
+    ...pageMeta(pageHref(path, page), text.title, text.description, `${path}/opengraph-image`, {
+      url: `${path}/feed.xml`,
+      title: `${text.network.name} news · Hashwire`,
+    }),
     ...pagedRobots(page),
   };
 }
@@ -109,6 +112,9 @@ export default async function NetworkPage({ params, searchParams }: PageProps<"/
                 ))}
               </span>
             )}
+            <a href={`/network/${network.slug}/feed.xml`}>
+              RSS<span className="visually-hidden"> feed of {network.name} news</span>
+            </a>
           </p>
         </>
       }

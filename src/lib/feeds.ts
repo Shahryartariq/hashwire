@@ -45,9 +45,30 @@ async function fetchFeed(url: string): Promise<string> {
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   if (Number(response.headers.get("content-length") ?? 0) > MAX_BYTES) throw new FeedError("Feed is too large");
-  const xml = await response.text();
-  if (xml.length > MAX_BYTES) throw new FeedError("Feed is too large");
-  return xml;
+  return readCapped(response, MAX_BYTES);
+}
+
+/**
+ * A response's text, read piece by piece and abandoned once it passes `maxBytes`. A feed without a
+ * Content-Length (or with a wrong one) can't make the server hold an unbounded download in memory.
+ */
+export async function readCapped(response: Response, maxBytes: number): Promise<string> {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  let bytes = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > maxBytes) {
+      await reader.cancel();
+      throw new FeedError("Feed is too large");
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
 }
 
 /** Reads and cleans one feed. Never throws: a failure is reported in the result. */

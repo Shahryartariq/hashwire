@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { BackLink } from "@/components/BackLink";
 import { Mark } from "@/components/Mark";
 import { ReaderControls } from "@/components/ReaderControls";
 import { getArticle } from "@/lib/feeds";
@@ -88,9 +89,7 @@ export default async function ReaderPage({ params }: PageProps<"/read/[id]">) {
               <a href={story.url} className="button">
                 Read it on {name}
               </a>
-              <Link href="/" className="button button-quiet">
-                Back to the news
-              </Link>
+              <BackLink className="button button-quiet">Back to the news</BackLink>
             </p>
           </footer>
         </article>

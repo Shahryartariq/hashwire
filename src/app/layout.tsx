@@ -1,4 +1,3 @@
-import "@fontsource-variable/archivo/wdth.css";
 import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";

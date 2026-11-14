@@ -10,7 +10,7 @@ const description =
   "Where Hashwire's crypto news and prices come from, how stories are sorted by network, and how to get a story corrected or removed.";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: { absolute: "About Hashwire: where the news and prices come from" },
   description,
   ...pageMeta("/about", "About Hashwire", description),
 };

@@ -29,11 +29,20 @@ export function absolute(path: string): string {
  * Per-page metadata pieces. A page's own `alternates` and `openGraph` replace the layout's,
  * so the RSS link and the default social image are added back here.
  */
-export function pageMeta(path: string, title: string, description: string, image = "/opengraph-image") {
+export function pageMeta(
+  path: string,
+  title: string,
+  description: string,
+  image = "/opengraph-image",
+  /** The page's own RSS feed, listed before the site-wide one. */
+  feed?: { url: string; title: string },
+) {
   return {
     alternates: {
       canonical: path,
-      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }] },
+      types: {
+        "application/rss+xml": [...(feed ? [feed] : []), { url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }],
+      },
     },
     openGraph: {
       type: "website" as const,

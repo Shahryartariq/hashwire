@@ -11,7 +11,7 @@ import type { FeedResult, SourceKind } from "@/lib/types";
 const description = `The ${SOURCES.length} crypto news feeds Hashwire reads every 15 minutes, from newsrooms, network teams, researchers and exchanges, and whether each one is working.`;
 
 export const metadata: Metadata = {
-  title: "Sources",
+  title: { absolute: `The ${SOURCES.length} crypto news sources behind Hashwire` },
   description,
   ...pageMeta("/sources", "Hashwire sources", description),
 };
