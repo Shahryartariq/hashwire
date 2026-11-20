@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { readAllFeeds, readFeed, readPrices, usingSampleData } from "./feeds";
+import { keepLastGood, readAllFeeds, readCapped, readFeed, readPrices, usingSampleData } from "./feeds";
+import type { FeedResult } from "./types";
 import { SOURCES } from "./sources";
 
 const RSS = `<?xml version="1.0"?><rss version="2.0"><channel><title>T</title>
@@ -95,5 +96,67 @@ describe("sample data", () => {
     expect(feeds).toHaveLength(SOURCES.length);
     expect(feeds.every((f) => f.ok && f.stories.length > 0)).toBe(true);
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("keepLastGood", () => {
+  const story = { id: "a", title: "Old but good" } as unknown as FeedResult["stories"][number];
+  const good: FeedResult = { slug: "solana", ok: true, fetchedAt: 1_000, stories: [story] };
+  const failed: FeedResult = { slug: "solana", ok: false, fetchedAt: 9_000, stories: [], error: "HTTP 429" };
+
+  it("uses the latest attempt when it worked", () => {
+    const fresh: FeedResult = { ...good, fetchedAt: 9_000 };
+    expect(keepLastGood(fresh, good)).toBe(fresh);
+  });
+
+  it("falls back to the last good copy, marked stale, when the latest attempt failed", () => {
+    expect(keepLastGood(failed, good)).toEqual({
+      slug: "solana",
+      ok: false,
+      stale: true,
+      fetchedAt: 1_000,
+      checkedAt: 9_000,
+      stories: [story],
+      error: "HTTP 429",
+    });
+  });
+
+  it("reports the failure when there's no good copy", () => {
+    expect(keepLastGood(failed, null)).toBe(failed);
+    expect(keepLastGood(failed, { ...good, stories: [] })).toBe(failed);
+  });
+});
+
+describe("readCapped", () => {
+  const streamOf = (chunks: string[]) =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          for (const c of chunks) controller.enqueue(new TextEncoder().encode(c));
+          controller.close();
+        },
+      }),
+    );
+
+  it("reads a response that fits", async () => {
+    await expect(readCapped(streamOf(["<rss>", "</rss>"]), 100)).resolves.toBe("<rss></rss>");
+  });
+
+  it("stops reading once a response passes the cap, even without a Content-Length", async () => {
+    await expect(readCapped(streamOf(["x".repeat(60), "x".repeat(60)]), 100)).rejects.toThrow("Feed is too large");
+  });
+
+  it("keeps multi-byte characters split across chunks intact", async () => {
+    const bytes = new TextEncoder().encode("é");
+    const response = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(bytes.slice(0, 1));
+          controller.enqueue(bytes.slice(1));
+          controller.close();
+        },
+      }),
+    );
+    await expect(readCapped(response, 100)).resolves.toBe("é");
   });
 });

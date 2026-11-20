@@ -47,7 +47,10 @@ export function official(cluster: Cluster): boolean {
   return cluster.stories.some((story) => SOURCE_MAP.get(story.source)?.kind === "network");
 }
 
-/** Simple full-text search over headlines and summaries. Every word must appear. */
+/**
+ * Simple full-text search over headlines and summaries. Every word must appear, at the start of a
+ * word: "eth" finds "Ethereum" and "ETH" but not "method".
+ */
 export function search(clusters: Cluster[], query: string): Cluster[] {
   const words = query
     .toLowerCase()
@@ -56,10 +59,15 @@ export function search(clusters: Cluster[], query: string): Cluster[] {
     .filter((w) => w.length > 1)
     .slice(0, 8);
   if (words.length === 0) return [];
+  const patterns = words.map((word) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(word)}`, "u"));
   return clusters.filter((cluster) =>
     cluster.stories.some((story) => {
       const haystack = `${story.title} ${story.summary ?? ""}`.toLowerCase();
-      return words.every((word) => haystack.includes(word));
+      return patterns.every((pattern) => pattern.test(haystack));
     }),
   );
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

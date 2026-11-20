@@ -3,6 +3,8 @@ import type { TopicSlug } from "./types";
 export interface Topic {
   slug: TopicSlug;
   name: string;
+  /** Label in the section nav, where space is tight. */
+  short?: string;
   /** Page title for search engines. */
   title: string;
   description: string;
@@ -29,6 +31,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "institutions",
     name: "ETFs and institutions",
+    short: "ETFs",
     title: "Crypto ETF and institutional news",
     description: "Crypto ETFs, banks, asset managers, treasury companies and tokenized stocks and funds: how big money is moving into crypto.",
     intro:
@@ -49,7 +52,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "defi",
     name: "DeFi",
-    title: "DeFi news: lending, DEXs, staking and prediction markets",
+    title: "DeFi news: lending, DEXs and prediction markets",
     description: "Decentralized finance news: DEXs, lending, staking and restaking, yield, onchain perpetuals and prediction markets.",
     intro:
       "Finance that runs on smart contracts: exchanges, lending markets, staking and restaking, onchain derivatives and prediction markets.",
@@ -69,6 +72,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "security",
     name: "Hacks and security",
+    short: "Security",
     title: "Crypto hacks, exploits and security news",
     description: "Crypto hacks and exploits, stolen funds and where they went, scams, North Korean attackers and security research.",
     intro:
@@ -79,7 +83,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "exchanges",
     name: "Exchanges",
-    title: "Crypto exchange news: Binance, Coinbase, Kraken and listings",
+    title: "Crypto exchange news: Binance, Coinbase and listings",
     description: "News from crypto exchanges: Binance, Coinbase, Kraken, OKX and others, new listings, withdrawals and outages.",
     intro:
       "The exchanges where most trading happens: Binance, Coinbase, Kraken, OKX and others, plus new listings, withdrawals and outages.",
@@ -89,7 +93,7 @@ export const TOPICS: Topic[] = [
   {
     slug: "development",
     name: "Development",
-    title: "Blockchain development news: upgrades, testnets and releases",
+    title: "Blockchain development news: upgrades and releases",
     description: "What developers are shipping: network upgrades and hard forks, testnets, client releases, protocol research and newsletters.",
     intro:
       "What the people building blockchains are shipping: upgrades and forks, testnet schedules, client releases and protocol research.",

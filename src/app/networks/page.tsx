@@ -41,10 +41,7 @@ export default async function NetworksPage() {
         <div className="band-inner">
           <h1>Networks</h1>
           <div className="band-intro">
-            <p>
-              Every story on Hashwire is tagged with the blockchains it&apos;s about. Pick a network to read only its news,
-              with its price, its own team&apos;s posts and the coverage from crypto newsrooms.
-            </p>
+            <p>Pick a network to see only its news, its price and posts from its own team.</p>
           </div>
         </div>
       </div>
@@ -52,7 +49,7 @@ export default async function NetworksPage() {
         {!wire.prices.ok && <p className="note">Prices didn&apos;t load just now; the news still works.</p>}
         <NetworkTable prices={wire.prices} clusters={wire.clusters} now={wire.now} />
         <p className="table-note">
-          Sorted by market cap. Prices by CoinGecko, refreshed every 10 minutes. Not investment advice.
+          Sorted by market cap. Prices from CoinGecko, refreshed every 10 minutes.
         </p>
       </div>
     </Frame>

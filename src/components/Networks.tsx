@@ -152,7 +152,7 @@ export function Movers({ prices }: { prices: Prices }) {
   return (
     <section className="panel" aria-labelledby="movers">
       <h2 id="movers" className="panel-title">
-        Biggest moves, 24 hours
+        Biggest moves today
       </h2>
       <ul className="counted movers">
         {rows.map((network) => (

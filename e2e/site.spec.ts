@@ -41,8 +41,36 @@ test.describe("front page", () => {
     await expect(lead.getByRole("link", { name: /CoinDesk/ })).toHaveAttribute("href", /coindesk\.com/);
 
     await expect(page.getByRole("heading", { level: 2, name: "Past 6 hours" })).toBeVisible();
-    await expect(page.locator(".story")).toHaveCount(40);
+    await expect(page.locator(".story")).toHaveCount(30);
     await expect(page.locator(".story-title", { hasText: "Crédit Mutuel" })).toHaveCount(0);
+  });
+
+  test("pages through older stories, and only page 1 is indexed", async ({ page }) => {
+    await page.goto("/");
+    const first = await page.locator(".story-title").allTextContents();
+    await expect(page.getByRole("navigation", { name: "More stories" })).toContainText("Page 1 of");
+    await expect(page.getByRole("link", { name: "Newer stories" })).toHaveCount(0);
+    await page.getByRole("link", { name: "Older stories" }).click();
+
+    await expect(page).toHaveURL(/\/\?page=2$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Earlier crypto news" })).toBeVisible();
+    await expect(page.locator(".lead")).toHaveCount(0);
+    const second = await page.locator(".story-title").allTextContents();
+    expect(second.length).toBeGreaterThan(0);
+    expect(second.filter((title) => first.includes(title))).toEqual([]);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/\?page=2$/);
+    await expect(page).toHaveTitle(/page 2/);
+
+    await page.getByRole("link", { name: "Newer stories" }).click();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("answers 404 for pages that don't exist", async ({ page }) => {
+    for (const path of ["/?page=0", "/?page=abc", "/?page=999", "/network/bitcoin?page=999"]) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
+    }
   });
 
   test("shows the networks with prices, and each one opens its own news", async ({ page }) => {
@@ -62,30 +90,40 @@ test.describe("front page", () => {
 
   test("tags every story with its networks, linked to their pages", async ({ page }) => {
     await page.goto("/");
-    const row = page.locator(".story", { hasText: "Coinbase XRP looked cheap" });
+    const row = page.locator(".story", { hasText: "XRP Burn Rate Surge" });
     await expect(row.locator(".chip")).toHaveText(["XRP Ledger"]);
     await row.getByRole("link", { name: "XRP Ledger" }).click();
     await expect(page).toHaveURL(/\/network\/xrp-ledger$/);
-    await expect(page.locator(".story", { hasText: "Coinbase XRP looked cheap" })).toHaveCount(1);
+    await expect(page.locator(".story", { hasText: "XRP Burn Rate Surge" })).toHaveCount(1);
   });
 
   test("shows a story once with all of its coverage", async ({ page }) => {
     await page.goto("/");
     const row = page.locator(".story", { hasText: "Morgan Stanley says it is among" });
     await expect(row).toHaveCount(1);
-    await expect(row.getByRole("img", { name: "Reported by 3 sources" })).toBeVisible();
+    await expect(row.locator(".also")).toHaveText("Also in The Block and The Defiant");
     await expect(row.locator(".also").getByRole("link")).toHaveCount(2);
   });
 
-  test("ranks coverage, the biggest price moves and topics", async ({ page }) => {
+  test("ranks coverage and the biggest price moves", async ({ page }) => {
     await page.goto("/");
     const ranked = page.getByRole("region", { name: "Most covered this week" }).getByRole("listitem");
     expect(await ranked.count()).toBeGreaterThanOrEqual(3);
-    const movers = page.getByRole("region", { name: "Biggest moves, 24 hours" }).getByRole("link");
+    const movers = page.getByRole("region", { name: "Biggest moves today" }).getByRole("link");
     await expect(movers).toHaveCount(5);
     await expect(movers.first()).toContainText("Polygon");
     await expect(movers.last()).toContainText("Tron");
-    await expect(page.getByRole("region", { name: "Browse by topic" }).getByRole("link")).toHaveCount(8);
+  });
+
+  test("keeps each story to a headline, a summary and one line of links", async ({ page }) => {
+    await page.goto("/");
+    const rows = page.locator(".story");
+    // No hashtag topics or coverage bars under stories: the nav has the topics.
+    await expect(page.locator(".story .tag, .story .cells")).toHaveCount(0);
+    for (const row of await rows.all()) {
+      await expect(row.locator(".story-foot")).toHaveCount(1);
+      await expect(row.locator(".story-foot .original-link")).toHaveCount(1);
+    }
   });
 
   test("marks stories that are new since the last visit", async ({ page }) => {
@@ -148,10 +186,13 @@ test.describe("networks", () => {
     await page.goto("/network/ethereum");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Ethereum");
     await expect(page.locator(".price-big")).toHaveText("$2,322");
-    await expect(page.getByRole("link", { name: "Official posts: Ethereum Foundation" })).toHaveAttribute(
+    await expect(page.locator(".band-links")).toContainText("From the team: Ethereum Foundation");
+    await expect(page.locator(".band-links").getByRole("link", { name: "Ethereum Foundation" })).toHaveAttribute(
       "href",
       "/source/ethereum-foundation",
     );
+    // One disclaimer, in the footer, instead of one per price.
+    await expect(page.getByText(/investment advice/)).toHaveCount(1);
     const rows = page.locator(".story");
     expect(await rows.count()).toBeGreaterThan(1);
     for (const row of await rows.all()) await expect(row.locator(".chip", { hasText: "Ethereum" })).toHaveCount(1);
@@ -172,9 +213,11 @@ test.describe("sections", () => {
   test("topic pages filter the wire and mark the current section", async ({ page }) => {
     await page.goto("/topic/security");
     await expect(page.getByRole("heading", { level: 1, name: "Hacks and security" })).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: "Hacks and security" }),
-    ).toHaveAttribute("aria-current", "page");
+    // The nav uses the short label.
+    await expect(page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: "Security" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(await page.locator(".story").count()).toBeGreaterThan(3);
     await expect(page.locator(".story", { hasText: "Binance Says $6.34 Billion Hack" })).toHaveCount(1);
     await expectAccessible(page);
@@ -183,19 +226,20 @@ test.describe("sections", () => {
   test("source pages show the source's stories and a link to its site", async ({ page }) => {
     await page.goto("/source/kraken");
     await expect(page.getByRole("heading", { level: 1, name: "Kraken" })).toBeVisible();
+    await expect(page).toHaveTitle("Kraken: latest crypto news · Hashwire");
     await expect(page.getByRole("link", { name: "Visit Kraken" })).toHaveAttribute("href", "https://blog.kraken.com/");
     // The VIP events post is filtered out; the two trading posts stay.
-    await expect(page.locator(".story-source", { hasText: "Kraken" })).toHaveCount(2);
+    await expect(page.getByRole("link", { name: "Read on Kraken" })).toHaveCount(2);
   });
 
   test("the sources page lists every feed with its status", async ({ page }) => {
     await page.goto("/sources");
     await expect(page.locator(".source-list li")).toHaveCount(SOURCES.length);
     // Every feed in the snapshot loads.
-    await expect(page.locator(".source-status .ok")).toHaveCount(SOURCES.length);
+    await expect(page.locator(".source-status", { hasText: /\d+ stor(y|ies) · checked/ })).toHaveCount(SOURCES.length);
+    await expect(page.locator(".source-status .warn")).toHaveCount(0);
     // Which feeds carry full posts for the reader view.
-    await expect(page.locator(".source-status", { hasText: "with the full post, readable here" }).first()).toBeVisible();
-    await expect(page.locator(".source-status", { hasText: "Summaries only" }).first()).toBeVisible();
+    await expect(page.locator(".source-status", { hasText: "full text" }).first()).toBeVisible();
     await expectAccessible(page);
   });
 
@@ -233,6 +277,31 @@ test.describe("search", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("<img src=x onerror=alert(1)>");
     await expect(page.locator("main img")).toHaveCount(0);
   });
+
+  test("explains when the query is too short to search", async ({ page }) => {
+    await page.goto("/search?q=x");
+    await expect(page.getByRole("status")).toHaveText("Type at least two letters or numbers to search.");
+    await expect(page.locator(".story")).toHaveCount(0);
+  });
+
+  test("offers the page of a network, topic or source whose name was searched", async ({ page }) => {
+    await page.goto("/search?q=Bitcoin");
+    const go = page.getByRole("navigation", { name: "Go straight to" });
+    await go.getByRole("link", { name: /Bitcoin news and price/ }).click();
+    await expect(page).toHaveURL(/\/network\/bitcoin$/);
+  });
+
+  test("pages through long result lists", async ({ page }) => {
+    await page.goto("/search?q=the");
+    const status = await page.getByRole("status").textContent();
+    const total = Number(status?.match(/^(\d+)/)?.[1]);
+    test.skip(!(total > 30), "Needs more than one page of results in the sample data");
+    await expect(page.locator(".story")).toHaveCount(30);
+    await page.getByRole("link", { name: "Older stories" }).click();
+    await expect(page).toHaveURL(/\/search\?q=the&page=2$/);
+    await expect(page.locator(".story")).toHaveCount(Math.min(30, total - 30));
+    await expect(page.getByRole("searchbox", { name: "Search crypto news" })).toHaveValue("the");
+  });
 });
 
 test.describe("search engines", () => {
@@ -257,6 +326,30 @@ test.describe("search engines", () => {
     expect(data.map((d: { "@type": string }) => d["@type"])).toEqual(["CollectionPage", "BreadcrumbList"]);
     expect(data[1].itemListElement.map((i: { name: string }) => i.name)).toEqual(["Hashwire", "Networks", "Solana"]);
     expect(data[0].mainEntity.itemListElement.length).toBeGreaterThan(0);
+  });
+
+  test("every page has a short, specific title and description", async ({ page }) => {
+    const seen = new Set<string>();
+    for (const path of ["/", "/networks", "/network/bitcoin", "/topic/markets", "/source/coindesk", "/sources", "/about"]) {
+      await page.goto(path);
+      const title = await page.title();
+      const description = (await page.locator('meta[name="description"]').getAttribute("content")) ?? "";
+      expect(title, path).not.toMatch(/\bAI\b/);
+      expect(seen.has(title), `${path} repeats a title`).toBe(false);
+      seen.add(title);
+      expect(title.length, path).toBeLessThanOrEqual(65);
+      expect(description.length, path).toBeGreaterThan(50);
+      expect(description.length, path).toBeLessThanOrEqual(160);
+    }
+  });
+
+  test("the sources and about pages carry breadcrumbs for search results", async ({ page }) => {
+    for (const [path, name] of [["/sources", "Sources"], ["/about", "About"]]) {
+      await page.goto(path);
+      const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+      const crumbs = blocks.flatMap((b) => [JSON.parse(b)].flat()).find((d) => d["@type"] === "BreadcrumbList");
+      expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(["Hashwire", name]);
+    }
   });
 
   test("the home page describes the site and its search", async ({ page }) => {
@@ -285,12 +378,66 @@ test.describe("search engines", () => {
       expect((await request.get(path)).status(), path).toBe(404);
     }
     await page.goto("/network/nope");
-    await expect(page.getByRole("heading", { level: 1, name: "This page isn’t on the chain" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Go to today’s news" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "See the latest news" })).toBeVisible();
+  });
+
+  test("forgiving addresses go to the right page instead of a 404", async ({ request }) => {
+    const redirects: [string, string][] = [
+      ["/network/Bitcoin", "/network/bitcoin"],
+      ["/network/btc", "/network/bitcoin"],
+      ["/network/ETH", "/network/ethereum"],
+      ["/topic/DeFi", "/topic/defi"],
+      ["/source/CoinDesk", "/source/coindesk"],
+      ["/network", "/networks"],
+      ["/source", "/sources"],
+      ["/topic", "/"],
+      ["/read", "/"],
+      ["/feed", "/feed.xml"],
+      ["/atom.xml", "/feed.xml"],
+      ["/favicon.ico", "/icon.svg"],
+      ["/?page=1", "/"],
+      ["/network/bitcoin?page=1", "/network/bitcoin"],
+    ];
+    for (const [from, to] of redirects) {
+      const response = await request.get(from, { maxRedirects: 0 });
+      expect(response.status(), from).toBe(308);
+      expect(new URL(response.headers().location, "http://x").pathname + new URL(response.headers().location, "http://x").search, from).toBe(to);
+    }
+    // A malformed address is a 404, not a server error.
+    expect((await request.get("/network/%E0%A4%A")).status()).toBe(404);
+  });
+
+  test("each network has its own RSS feed, linked from its page", async ({ page, request }) => {
+    await page.goto("/network/bitcoin");
+    const alternates = page.locator('link[rel="alternate"][type="application/rss+xml"]');
+    await expect(alternates.first()).toHaveAttribute("href", /\/network\/bitcoin\/feed\.xml$/);
+    await expect(page.locator(".band-links").getByRole("link", { name: /RSS/ })).toHaveAttribute(
+      "href",
+      "/network/bitcoin/feed.xml",
+    );
+    const feed = await request.get("/network/bitcoin/feed.xml");
+    expect(feed.headers()["content-type"]).toContain("application/rss+xml");
+    const xml = await feed.text();
+    expect(xml).toContain("<title>Bitcoin news · Hashwire</title>");
+    expect(xml.match(/<item>/g)?.length).toBeGreaterThan(0);
+    expect(xml.match(/<category>Bitcoin<\/category>/g)?.length).toBe(xml.match(/<item>/g)?.length);
+    expect((await request.get("/network/nope/feed.xml")).status()).toBe(404);
   });
 });
 
 test.describe("security", () => {
+  test("publishes where to report a security problem", async ({ request }) => {
+    const response = await request.get("/.well-known/security.txt");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("text/plain");
+    const body = await response.text();
+    expect(body).toMatch(/^Contact: https:\/\/github\.com\/Shahryartariq\/hashwire\/security\/advisories\/new$/m);
+    const expires = Date.parse(body.match(/^Expires: (.+)$/m)![1]);
+    expect(expires).toBeGreaterThan(Date.now() + 300 * 86_400_000);
+    expect((await request.get("/security.txt", { maxRedirects: 0 })).headers().location).toContain("/.well-known/security.txt");
+  });
+
   test("sends a strict Content Security Policy with a fresh nonce", async ({ request }) => {
     const first = await request.get("/");
     const second = await request.get("/");
@@ -308,7 +455,7 @@ test.describe("security", () => {
   test("links to articles are plain http(s) links", async ({ page }) => {
     await page.goto("/");
     const hrefs = await page.locator(".story-title a, .lead-title a").evaluateAll((links) => links.map((a) => a.getAttribute("href")));
-    expect(hrefs.length).toBeGreaterThan(40);
+    expect(hrefs.length).toBeGreaterThan(30);
     expect(hrefs.every((href) => /^https?:\/\//.test(href!))).toBe(true);
   });
 });
@@ -456,6 +603,26 @@ test.describe("reader view", () => {
     await expect(page.getByRole("link", { name: "Back to Hashwire" })).toHaveAttribute("href", "/");
     await expect(page.getByRole("link", { name: "Read it on The Block" })).toHaveAttribute("href", /theblock\.co/);
     await expect(page.getByText("Images, videos and embeds are on the original post.")).toBeVisible();
+  });
+
+  test("goes back to the list the reader came from", async ({ page }) => {
+    // The sample data's readable story is the lead; it also turns up in search results.
+    await page.goto("/search?q=Cr%C3%A9dit%20Mutuel");
+    await page.locator(".reader-link").first().click();
+    await expect(page).toHaveURL(/\/read\//);
+    await page.getByRole("link", { name: "Back to the news" }).click();
+    await expect(page).toHaveURL(/\/search\?q=Cr%C3%A9dit/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Crédit Mutuel");
+  });
+
+  test("opened from a shared link, goes back to the front page", async ({ page }) => {
+    await openReader(page);
+    const url = page.url();
+    const fresh = await page.context().newPage();
+    await fresh.goto(url);
+    await fresh.getByRole("link", { name: "Back to the news" }).click();
+    await expect(fresh).toHaveURL(/\/$/);
+    await fresh.close();
   });
 
   test("keeps only safe text from the feed", async ({ page }) => {

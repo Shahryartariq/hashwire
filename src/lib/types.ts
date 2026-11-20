@@ -100,10 +100,16 @@ export interface Cluster {
 
 export interface FeedResult {
   slug: string;
+  /** Whether the latest attempt to read the feed worked. */
   ok: boolean;
+  /** When these stories were read. */
   fetchedAt: number;
   stories: Story[];
   error?: string;
+  /** The latest attempt failed and these stories are the last copy that loaded. */
+  stale?: boolean;
+  /** When the failed attempt was made, for stale copies. */
+  checkedAt?: number;
 }
 
 export interface Price {

@@ -1,4 +1,30 @@
 /*
+ * Archivo (SIL Open Font License, see fonts/OFL.txt), trimmed to the weights (400–800) and widths
+ * (78–100%) this site uses: 57 KB instead of 90 KB for the Latin file, with the same shapes.
+ */
+@font-face {
+  font-family: "Archivo Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 800;
+  font-stretch: 78% 100%;
+  src: url("./fonts/archivo-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Archivo Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 800;
+  font-stretch: 78% 100%;
+  src: url("./fonts/archivo-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
  * Hashwire
  * Aubergine masthead band for the lead story and the network strip, lavender-grey paper for
  * the wire, and one amber used only where it carries meaning: lit coverage cells, the newest
@@ -446,8 +472,8 @@ main:focus {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 1rem;
-  padding-bottom: 0.9rem;
-  margin-bottom: 1.75rem;
+  padding-bottom: 1rem;
+  margin-bottom: 2.25rem;
   border-bottom: 1px solid var(--band-rule);
 }
 
@@ -507,7 +533,7 @@ main:focus {
 .lead {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.9rem 3rem;
+  gap: 1.1rem 3.5rem;
 }
 
 @media (min-width: 60rem) {
@@ -644,48 +670,20 @@ main:focus {
   background: var(--mark);
 }
 
-/* ---------- Coverage cells ---------- */
-
-.cells {
-  display: inline-flex;
-  gap: 2px;
-  vertical-align: middle;
-}
-
-.cell {
-  width: 7px;
-  height: 7px;
-  border-radius: 1.5px;
-  background: var(--cell-off);
-}
-
-.cell-on {
-  background: var(--cell-on);
-}
-
-.band .cell,
-.footer .cell {
-  background: var(--band-cell-off);
-}
-
-.band .cell-on {
-  background: var(--mark);
-}
-
 /* ---------- Columns ---------- */
 
 .columns {
   display: grid;
   /* minmax(0, …): without it the single column grows to fit its widest content on phones. */
   grid-template-columns: minmax(0, 1fr);
-  gap: 3rem;
-  padding-block: 2rem 4rem;
+  gap: 3.5rem;
+  padding-block: 2.5rem 5rem;
 }
 
 @media (min-width: 60rem) {
   .columns {
-    grid-template-columns: minmax(0, 1fr) 19rem;
-    gap: 4rem;
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    gap: 5rem;
   }
 
   .column-side {
@@ -696,23 +694,20 @@ main:focus {
 }
 
 .page-body {
-  padding-block: 2rem 4rem;
+  padding-block: 2.5rem 5rem;
 }
 
 /* ---------- The wire ---------- */
 
 .wire-group + .wire-group {
-  margin-top: 2rem;
-  /* Groups below the first are skipped for layout and paint until they're near the screen. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 1600px;
+  margin-top: 3rem;
 }
 
 .wire-heading {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--muted);
@@ -727,14 +722,14 @@ main:focus {
 
 .story {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr);
-  gap: 0 0.75rem;
-  padding-block: 0.95rem;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0 1rem;
+  padding-block: 1.6rem;
   border-bottom: 1px solid var(--rule);
 }
 
 .story-age {
-  padding-top: 0.15rem;
+  padding-top: 0.2rem;
   font-size: 0.875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -760,10 +755,12 @@ main:focus {
 }
 
 .story-title {
+  max-width: 46rem;
   font-size: var(--step-1);
   font-weight: 650;
   letter-spacing: -0.01em;
   line-height: 1.3;
+  text-wrap: pretty;
 }
 
 .story-title a,
@@ -786,34 +783,27 @@ main:focus {
 
 .story-summary {
   display: -webkit-box;
-  margin-top: 0.3rem;
+  /* About 70 characters a line: long lines are hard to read. */
+  max-width: 40rem;
+  margin-top: 0.5rem;
   overflow: hidden;
   font-size: 0.9375rem;
+  line-height: 1.6;
   color: var(--muted);
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-clamp: 2;
 }
 
-.story-meta {
+/* The ways to read a story, then where else it ran and which networks it's about, on one line. */
+.story-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.9rem;
-  margin-top: 0.5rem;
+  gap: 0.6rem 1.1rem;
+  margin-top: 1rem;
   font-size: var(--step--1);
   color: var(--muted);
-}
-
-.story-source {
-  font-weight: 700;
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.story-source:hover,
-.tag:hover {
-  text-decoration: underline;
 }
 
 .official {
@@ -837,22 +827,6 @@ main:focus {
   color: var(--ink);
 }
 
-.tags {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.tag {
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.tag::before {
-  content: "#";
-  opacity: 0.55;
-}
-
 .empty,
 .notice {
   padding: 1.5rem 0;
@@ -868,7 +842,7 @@ main:focus {
 /* ---------- Side column ---------- */
 
 .panel + .panel {
-  margin-top: 2.5rem;
+  margin-top: 3rem;
 }
 
 .panel {
@@ -882,19 +856,6 @@ main:focus {
   font-weight: 800;
 }
 
-.panel-quiet p {
-  font-size: 0.9375rem;
-  color: var(--muted);
-}
-
-.panel-quiet p + p {
-  margin-top: 0.6rem;
-}
-
-.panel-quiet a {
-  color: var(--ink);
-}
-
 .ranked {
   counter-reset: rank;
 }
@@ -902,8 +863,8 @@ main:focus {
 .ranked li {
   display: grid;
   grid-template-columns: 1.5rem minmax(0, 1fr);
-  gap: 0.15rem 0.25rem;
-  padding-block: 0.6rem;
+  gap: 0.25rem 0.25rem;
+  padding-block: 0.85rem;
   counter-increment: rank;
   border-bottom: 1px solid var(--rule);
 }
@@ -933,7 +894,7 @@ main:focus {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding-block: 0.45rem;
+  padding-block: 0.6rem;
   font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
@@ -982,7 +943,7 @@ main:focus {
 }
 
 .source-list li {
-  padding-block: 1rem;
+  padding-block: 1.25rem;
   border-top: 1px solid var(--rule);
 }
 
@@ -996,18 +957,16 @@ main:focus {
   color: var(--muted);
 }
 
-.source-status {
+.source-list .source-status {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 1rem;
+  margin-top: 0.6rem;
+  font-size: var(--step--1);
 }
 
 .source-status a {
   color: var(--ink);
-}
-
-.ok {
-  color: var(--official);
 }
 
 .warn {
@@ -1054,6 +1013,19 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Search: the network, topic or source whose name was typed, above the results. */
+.shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.shortcuts .button {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9375rem;
 }
 
 .inline-links {
@@ -1139,19 +1111,18 @@ main:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.65rem;
 }
 
 .lead .story-actions {
-  margin: 0.25rem 0 0.35rem;
+  margin: 0.4rem 0 0.25rem;
 }
 
 .reader-link,
 .original-link {
   /* Inline-block, not flex: flex items would trim the spaces around the "·". */
   display: inline-block;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.5;
   text-decoration: none;
@@ -1196,6 +1167,38 @@ main:focus {
 
 .band .original-link:hover {
   border-color: var(--band-ink);
+}
+
+/* The lead's buttons are the band's main actions, so a step larger. */
+.lead .reader-link,
+.lead .original-link {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.875rem;
+}
+
+/* ---------- Pages of stories ---------- */
+
+.pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  font-size: 0.9375rem;
+}
+
+.pager-link {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pager-link[rel="next"] {
+  justify-self: end;
+}
+
+.pager-count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* On paper, the publisher's site is enough; the buttons are for the screen. */

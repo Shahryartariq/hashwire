@@ -3,7 +3,7 @@ export const SITE_NAME = "Hashwire";
 export const TAGLINE = "Crypto and blockchain news, network by network.";
 
 export const SITE_DESCRIPTION =
-  "Crypto news by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with prices, from CoinDesk, The Block, the networks' own teams and dozens more sources. Updated every 15 minutes.";
+  "Crypto news sorted by blockchain: Bitcoin, Ethereum, Solana and 19 more networks, with live prices. From CoinDesk, The Block and more, updated every 15 minutes.";
 
 export const AUTHOR = { name: "Muhammad Shehryar", url: "https://github.com/Shahryartariq" };
 export const SOURCE_URL = "https://github.com/Shahryartariq/hashwire";
@@ -29,11 +29,20 @@ export function absolute(path: string): string {
  * Per-page metadata pieces. A page's own `alternates` and `openGraph` replace the layout's,
  * so the RSS link and the default social image are added back here.
  */
-export function pageMeta(path: string, title: string, description: string, image = "/opengraph-image") {
+export function pageMeta(
+  path: string,
+  title: string,
+  description: string,
+  image = "/opengraph-image",
+  /** The page's own RSS feed, listed before the site-wide one. */
+  feed?: { url: string; title: string },
+) {
   return {
     alternates: {
       canonical: path,
-      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }] },
+      types: {
+        "application/rss+xml": [...(feed ? [feed] : []), { url: "/feed.xml", title: `${SITE_NAME}: latest crypto news` }],
+      },
     },
     openGraph: {
       type: "website" as const,
@@ -51,4 +60,14 @@ export function pageMeta(path: string, title: string, description: string, image
 /** JSON for a <script type="application/ld+json">, safe against "</script>" in the data. */
 export function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+/** A BreadcrumbList for a page under the home page: Hashwire › … › this page. */
+export function breadcrumbLd(trail: { name: string; path: string }[]) {
+  const crumbs = [{ name: SITE_NAME, path: "/" }, ...trail];
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: absolute(c.path) })),
+  };
 }

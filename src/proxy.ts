@@ -2,9 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { measurementId } from "@/lib/analytics";
 import { buildCsp } from "@/lib/csp";
-import { networkBySlug } from "@/lib/networks";
-import { sourceBySlug } from "@/lib/sources";
-import { topicBySlug } from "@/lib/topics";
+import { resolveSection, type SectionKind } from "@/lib/routes";
 
 const SECTION = /^\/(topic|source|network)\/([^/]+)\/?$/;
 
@@ -13,13 +11,27 @@ const SECTION = /^\/(topic|source|network)\/([^/]+)\/?$/;
  * that Next.js itself rendered with the nonce may run.
  */
 export function proxy(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
   // Unknown networks, topics and sources get a real 404 status before any HTML is streamed.
-  const section = SECTION.exec(request.nextUrl.pathname);
+  // A different spelling of a real one ("/network/BTC") goes to its proper address.
+  const section = SECTION.exec(pathname);
   if (section) {
-    const slug = decodeURIComponent(section[2]);
-    const known =
-      section[1] === "topic" ? topicBySlug(slug) : section[1] === "network" ? networkBySlug(slug) : sourceBySlug(slug);
-    if (!known) return NextResponse.rewrite(new URL("/_not-a-page", request.url));
+    const slug = resolveSection(section[1] as SectionKind, section[2]);
+    if (!slug) return NextResponse.rewrite(new URL("/_not-a-page", request.url));
+    const proper = `/${section[1]}/${slug}`;
+    if (pathname !== proper) {
+      const url = request.nextUrl.clone();
+      url.pathname = proper;
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
+  // Page 1 has one address, without the parameter.
+  if (searchParams.get("page") === "1") {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete("page");
+    return NextResponse.redirect(url, 308);
   }
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -39,7 +51,7 @@ export const config = {
   matcher: [
     {
       source:
-        "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|feed.xml|sitemap.xml|robots.txt|manifest.webmanifest|opengraph-image).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|\\.well-known|apple-icon|feed.xml|sitemap.xml|robots.txt|manifest.webmanifest|opengraph-image).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

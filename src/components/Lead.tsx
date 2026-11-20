@@ -4,7 +4,6 @@ import { sourceBySlug, sourceName } from "@/lib/sources";
 import { agoLong } from "@/lib/time";
 import type { Cluster } from "@/lib/types";
 
-import { Coverage } from "./Coverage";
 import { NetworkChip } from "./Networks";
 import { StoryActions } from "./StoryList";
 
@@ -15,10 +14,7 @@ export function Lead({ cluster, now }: { cluster: Cluster; now: number }) {
   const official = sourceBySlug(lead.source)?.kind === "network";
   return (
     <article className="lead" aria-labelledby="lead-title">
-      <p className="lead-why">
-        <Coverage count={cluster.sources.length} />
-        {widely ? `Reported by ${cluster.sources.length} sources` : "Latest story"}
-      </p>
+      <p className="lead-why">{widely ? `Reported by ${cluster.sources.length} sources` : "Latest story"}</p>
       <h2 id="lead-title" className={lead.title.length > 72 ? "lead-title is-long" : "lead-title"}>
         <a href={lead.url}>{lead.title}</a>
       </h2>
